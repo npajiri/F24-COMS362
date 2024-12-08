@@ -1,5 +1,7 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class Financials {
     private static final String FINANCES_FILE = "finances.txt";
@@ -61,4 +63,59 @@ public class Financials {
             System.err.println("Error reading financial history: " + e.getMessage());
         }
     }
+
+    // Update total expenses after a supplier declines an order
+    public void subtractFromSpending(double amount) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(FINANCES_FILE))) {
+            List<String> lines = new ArrayList<>();
+            boolean updated = false;
+    
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("Spending(Supplier Orders):")) {
+                    String[] parts = line.split("\\$");
+                    
+                    // Check if the line has the expected structure
+                    if (parts.length >= 3) {
+                        double currentSpending = Double.parseDouble(parts[2].trim());
+    
+                        // Prevent subtraction if spending is zero or less
+                        if (currentSpending > 0) {
+                            currentSpending -= amount;
+                            // Ensure spending doesn't go negative
+                            if (currentSpending < 0) {
+                                currentSpending = 0;
+                            }
+                            lines.add(parts[0] + "$" + parts[1] + String.format("%.2f", currentSpending));
+                            updated = true;
+                        } else {
+                            lines.add(line); // If spending is zero, re-add the line
+                        }
+                    } else {
+                        System.err.println("Skipping malformed line: " + line);
+                        lines.add(line); // Keep malformed line unchanged
+                    }
+                } else {
+                    lines.add(line);
+                }
+            }
+    
+            if (!updated) {
+                System.out.println("No updates were made. Spending might already be zero.");
+                return;
+            }
+    
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(FINANCES_FILE))) {
+                for (String updatedLine : lines) {
+                    writer.write(updatedLine);
+                    writer.newLine();
+                }
+            }
+        } catch (IOException | NumberFormatException e) {
+            System.err.println("Error updating finances: " + e.getMessage());
+        }
+    }
+    
+    
+
 }

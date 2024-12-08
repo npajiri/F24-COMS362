@@ -147,16 +147,33 @@ public class SupplierMenu {
         }
     }
 
+    // private void handleDeclineOrder(Scanner scanner) {
+    //     System.out.println("\n=== Decline an Order ===");
+    //     System.out.print("Enter Order ID to decline: ");
+    //     String orderId = scanner.nextLine();
+
+    //     boolean declined = productManagement.declineSupplierOrder(orderId);
+    //     if (declined) {
+    //         System.out.println("Order " + orderId + " has been declined.");
+    //     } else {
+    //         System.out.println("Order ID not found or already processed.");
+    //     }
+    // }
+
     private void handleDeclineOrder(Scanner scanner) {
         System.out.println("\n=== Decline an Order ===");
         System.out.print("Enter Order ID to decline: ");
         String orderId = scanner.nextLine();
-
-        boolean declined = productManagement.declineSupplierOrder(orderId);
-        if (declined) {
+    
+        double orderCost = productManagement.declineSupplierOrder(orderId);
+        if (orderCost >= 0) {
+            // Update the financials to subtract spending
+            Financials financials = new Financials();
+            financials.subtractFromSpending(orderCost);
             System.out.println("Order " + orderId + " has been declined.");
         } else {
             System.out.println("Order ID not found or already processed.");
         }
     }
+    
 }

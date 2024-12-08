@@ -241,8 +241,42 @@ public boolean fulfillSupplierOrder(String orderId) {
     return found;
 }
 
-public boolean declineSupplierOrder(String orderId) {
+// public boolean declineSupplierOrder(String orderId) {
+//     List<String> updatedLines = new ArrayList<>();
+//     boolean found = false;
+
+//     try (BufferedReader reader = new BufferedReader(new FileReader("supplier_orders.txt"))) {
+//         String line;
+//         while ((line = reader.readLine()) != null) {
+//             String[] parts = line.split("\\|");
+//             if (parts[0].equals(orderId) && parts[2].equalsIgnoreCase("Pending")) {
+//                 updatedLines.add(orderId + "|" + parts[1] + "|Declined|" + parts[3] + "|" + parts[4] + "|" + parts[5]);
+//                 found = true;
+//             } else {
+//                 updatedLines.add(line);
+//             }
+//         }
+//     } catch (IOException e) {
+//         System.err.println("Error reading supplier orders file: " + e.getMessage());
+//         return false;
+//     }
+
+//     try (BufferedWriter writer = new BufferedWriter(new FileWriter("supplier_orders.txt"))) {
+//         for (String line : updatedLines) {
+//             writer.write(line);
+//             writer.newLine();
+//         }
+//     } catch (IOException e) {
+//         System.err.println("Error updating supplier orders file: " + e.getMessage());
+//         return false;
+//     }
+
+//     return found;
+// }
+
+public double declineSupplierOrder(String orderId) {
     List<String> updatedLines = new ArrayList<>();
+    double orderCost = -1;
     boolean found = false;
 
     try (BufferedReader reader = new BufferedReader(new FileReader("supplier_orders.txt"))) {
@@ -250,7 +284,9 @@ public boolean declineSupplierOrder(String orderId) {
         while ((line = reader.readLine()) != null) {
             String[] parts = line.split("\\|");
             if (parts[0].equals(orderId) && parts[2].equalsIgnoreCase("Pending")) {
+                // Mark the order as declined
                 updatedLines.add(orderId + "|" + parts[1] + "|Declined|" + parts[3] + "|" + parts[4] + "|" + parts[5]);
+                orderCost = Double.parseDouble(parts[3]); // Extract the order cost
                 found = true;
             } else {
                 updatedLines.add(line);
@@ -258,21 +294,22 @@ public boolean declineSupplierOrder(String orderId) {
         }
     } catch (IOException e) {
         System.err.println("Error reading supplier orders file: " + e.getMessage());
-        return false;
     }
 
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter("supplier_orders.txt"))) {
-        for (String line : updatedLines) {
-            writer.write(line);
-            writer.newLine();
+    if (found) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("supplier_orders.txt"))) {
+            for (String updatedLine : updatedLines) {
+                writer.write(updatedLine);
+                writer.newLine();
+            }
+        } catch (IOException e) {
+            System.err.println("Error updating supplier orders file: " + e.getMessage());
         }
-    } catch (IOException e) {
-        System.err.println("Error updating supplier orders file: " + e.getMessage());
-        return false;
     }
 
-    return found;
+    return found ? orderCost : -1;
 }
+
 
 
 public boolean updateStock(String productId, int quantityChange) {
