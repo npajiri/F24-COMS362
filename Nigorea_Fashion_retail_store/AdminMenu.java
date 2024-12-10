@@ -34,7 +34,8 @@ public class AdminMenu {
             System.out.println("8. View Company Finances");
             System.out.println("9. View Reports"); 
             System.out.println("10. Manage Worker Contracts");
-            System.out.println("11. Exit to Main Menu");
+            System.out.println("11. View Performance Report");
+            System.out.println("0. Exit to Main Menu");
             System.out.print("Enter your choice: ");
 
             if (!scanner.hasNextInt()) {
@@ -88,6 +89,10 @@ public class AdminMenu {
                     break;
 
                 case 11:
+                    generateWorkerPerformanceReport(scanner);
+                    break;    
+                
+                case 0:
                     System.out.println("Exiting to main menu...");
                     running = false;
                     break;
@@ -555,6 +560,26 @@ private void manageWorkerContracts(Scanner scanner) {
     workerSystem.addOrUpdateWorker(worker);
 
     System.out.println("Worker contract updated successfully.");
+}
+
+private void generateWorkerPerformanceReport(Scanner scanner) {
+    ReportManager reportManager = new ReportManager(new Database());
+
+    System.out.println("\n=== Generate Worker Performance Report ===");
+    System.out.print("Enter Start Date (YYYY-MM-DD): ");
+    String startDate = scanner.nextLine();
+    System.out.print("Enter End Date (YYYY-MM-DD): ");
+    String endDate = scanner.nextLine();
+
+    DetailedReport report = reportManager.generateWorkerPerformanceReport(startDate, endDate);
+    if (report != null) {
+        System.out.println("Report Generated Successfully:");
+        for (String detail : report.getDetails()) {
+            System.out.println(detail);
+        }
+    } else {
+        System.out.println("Failed to generate report. Please check the parameters.");
+    }
 }
 
 
