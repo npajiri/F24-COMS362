@@ -83,7 +83,7 @@ public class AdminMenu {
                     break;
 
                 case 9:
-                    handleReports(scanner); // New Reports Functionality
+                    handleReports(scanner); 
                     break;
 
                 case 10:
