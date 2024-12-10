@@ -1,3 +1,10 @@
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class EmployeeMenu {
@@ -17,7 +24,8 @@ public class EmployeeMenu {
             System.out.println("1. Add a Product");
             System.out.println("2. View All Products");
             System.out.println("3. Update Product Details");
-            System.out.println("4. Exit to Main Menu");
+            System.out.println("4. Handle Work Orders");
+            System.out.println("0. Exit to Main Menu");
             System.out.print("Enter your choice: ");
 
             int choice = scanner.nextInt();
@@ -35,8 +43,12 @@ public class EmployeeMenu {
                 case 3:
                     handleUpdateProduct(scanner);
                     break;
-
+                
                 case 4:
+                    handleWorkOrders(scanner);
+                    break;
+
+                case 0:
                     System.out.println("Exiting to main menu...");
                     running = false; // Exit the loop to return to the main menu
                     break;
@@ -46,6 +58,58 @@ public class EmployeeMenu {
             }
         }
     }
+
+    private void handleWorkOrders(Scanner scanner) {
+    System.out.println("\n=== Work Orders ===");
+    try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            System.out.println(line);
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading work orders: " + e.getMessage());
+    }
+
+    System.out.print("Enter Registration ID to mark as completed: ");
+    String registrationId = scanner.nextLine();
+
+    markWorkOrderAsCompleted(registrationId);
+}
+
+// Mark work order as completed
+private void markWorkOrderAsCompleted(String registrationId) {
+    List<String> updatedOrders = new ArrayList<>();
+    boolean found = false;
+
+    try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.contains("Registration ID: " + registrationId)) {
+                found = true;
+                updatedOrders.add(line + " | Status: Completed");
+            } else {
+                updatedOrders.add(line);
+            }
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading work orders: " + e.getMessage());
+    }
+
+    if (found) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("work_orders.txt"))) {
+            for (String updatedOrder : updatedOrders) {
+                writer.write(updatedOrder);
+                writer.newLine();
+            }
+            System.out.println("Work order marked as completed.");
+        } catch (IOException e) {
+            System.err.println("Error updating work orders: " + e.getMessage());
+        }
+    } else {
+        System.out.println("Registration ID not found.");
+    }
+}
+
 
     private void handleAddProduct(Scanner scanner) {
         System.out.println("\n=== Add a Product ===");

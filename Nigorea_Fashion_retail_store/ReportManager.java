@@ -105,4 +105,9 @@ public class ReportManager {
         System.out.println("Exporting report: " + detailedReport.getReportMetadata().getReportType());
         // File writing logic could be implemented here
     }
+
+    public DetailedReport generateWorkerPerformanceReport(String startDate, String endDate) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'generateWorkerPerformanceReport'");
+    }
 }

@@ -37,6 +37,7 @@ public class AdminMenu {
             System.out.println("9. View Reports"); // New Option
             System.out.println("10. Manage Worker Contracts");
             System.out.println("11. View Performance Report");
+            System.out.println("12. Manage Events");
             System.out.println("0. Exit to Main Menu");
             System.out.print("Enter your choice: ");
 
@@ -93,6 +94,10 @@ public class AdminMenu {
                 case 11:
                     generateWorkerPerformanceReport(scanner);
                     break;   
+
+                case 12:
+                    handleManageEvents(scanner);
+                    break;  
 
                 case 0:
                     System.out.println("Exiting to main menu...");
@@ -295,31 +300,31 @@ private void handleReviewCustomerOrders(Scanner scanner) {
     }
 }
 
-// private void handleViewOrdersByStatus(String status) {
-//     System.out.println("\n=== " + status + " Orders ===");
-//     try (BufferedReader reader = new BufferedReader(new FileReader("orders.txt"))) {
-//         String line;
-//         boolean hasOrders = false;
+private void handleViewOrdersByStatus(String status) {
+    System.out.println("\n=== " + status + " Orders ===");
+    try (BufferedReader reader = new BufferedReader(new FileReader("orders.txt"))) {
+        String line;
+        boolean hasOrders = false;
 
-//         while ((line = reader.readLine()) != null) {
-//             String[] parts = line.split("\\|");
-//             if (parts[3].equalsIgnoreCase(status)) {
-//                 hasOrders = true;
-//                 String orderID = parts[0];
-//                 String orderDate = parts[1];
-//                 double totalCost = Double.parseDouble(parts[2]);
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("\\|");
+            if (parts[3].equalsIgnoreCase(status)) {
+                hasOrders = true;
+                String orderID = parts[0];
+                String orderDate = parts[1];
+                double totalCost = Double.parseDouble(parts[2]);
 
-//                 System.out.printf("Order ID: %s | Date: %s | Total: $%.2f%n", orderID, orderDate, totalCost);
-//             }
-//         }
+                System.out.printf("Order ID: %s | Date: %s | Total: $%.2f%n", orderID, orderDate, totalCost);
+            }
+        }
 
-//         if (!hasOrders) {
-//             System.out.println("No " + status.toLowerCase() + " orders found.");
-//         }
-//     } catch (IOException e) {
-//         System.err.println("Error reading orders file: " + e.getMessage());
-//     }
-// }
+        if (!hasOrders) {
+            System.out.println("No " + status.toLowerCase() + " orders found.");
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading orders file: " + e.getMessage());
+    }
+}
 
 private void handleViewOrdersByStatus(String status, String customerId) {
     System.out.println("\n=== " + status + " Orders ===");
@@ -347,9 +352,9 @@ private void handleViewOrdersByStatus(String status, String customerId) {
     }
 }
 
-private void handleViewOrdersByStatus(String status) {
-    handleViewOrdersByStatus(status, null);
-}
+// private void handleViewOrdersByStatus(String status) {
+//     handleViewOrdersByStatus(status, null);
+// }
 
 private void handleShipOrder(Scanner scanner) {
     System.out.println("Do you want to view:");
@@ -362,7 +367,9 @@ private void handleShipOrder(Scanner scanner) {
 
     String customerId = null;
 
-    if (choice == 2) {
+    if(choice == 1){
+        handleViewOrdersByStatus("Pending");
+    }else if (choice == 2) {
         System.out.print("Enter Customer ID: ");
         customerId = scanner.nextLine();
         
@@ -371,14 +378,14 @@ private void handleShipOrder(Scanner scanner) {
             System.out.println("Invalid Customer ID. Returning to menu...");
             return;
         }
-    } else if (choice != 1) {
+        
+        handleViewOrdersByStatus("Pending", customerId);
+    } else{
         System.out.println("Invalid choice. Returning to menu...");
         return;
     }
     
 
-    // Display orders based on choice
-    handleViewOrdersByStatus("Pending", customerId);
 
     System.out.println("\n=== Ship an Order ===");
     System.out.print("Enter Order ID to ship: ");
@@ -692,6 +699,225 @@ private void generateWorkerPerformanceReport(Scanner scanner) {
         System.out.println("Failed to generate report. Please check the parameters.");
     }
 }
+
+private void handleManageEvents(Scanner scanner) {
+    boolean managing = true;
+
+    while (managing) {
+        System.out.println("\n=== Manage Events ===");
+        System.out.println("1. Manage Fashion Shows");
+        System.out.println("2. Manage Launch Parties");
+        System.out.println("3. Manage Sale Previews");
+        System.out.println("4. Exit to Admin Menu");
+        System.out.print("Enter your choice: ");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        switch (choice) {
+            case 1:
+                handleFashionShows(scanner);
+                break;
+            case 2:
+                System.out.println("Launch Parties management is under development.");
+                break;
+            case 3:
+                System.out.println("Sale Previews management is under development.");
+                break;
+            case 4:
+                System.out.println("Returning to Admin Menu...");
+                managing = false;
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+        }
+    }
+}
+
+private void handleFashionShows(Scanner scanner) {
+    boolean managingFashionShows = true;
+
+    while (managingFashionShows) {
+        System.out.println("\n=== Manage Fashion Shows ===");
+        System.out.println("1. View Fashion Show Orders");
+        System.out.println("2. Create Work Orders");
+        System.out.println("3. Mark Event Orders as Shipped");
+        System.out.println("4. Back to Events Management");
+        System.out.print("Enter your choice: ");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        switch (choice) {
+            case 1:
+                handleFashionShowOrders(scanner);
+                break;
+            case 2:
+                handleCreateWorkOrders(scanner);
+                break;
+            case 3:
+                handleShipping(scanner);
+                break;
+            case 4:
+                System.out.println("Returning to Events Management...");
+                managingFashionShows = false;
+                break;
+            default:
+                System.out.println("Invalid choice. Please try again.");
+        }
+    }
+}
+
+private void handleFashionShowOrders(Scanner scanner) {
+    System.out.println("\n=== Fashion Show Orders ===");
+    try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
+        String line;
+        boolean hasOrders = false;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("\\|");
+            if (parts[1].equalsIgnoreCase("Fashion Show")) { // Filter by event name
+                hasOrders = true;
+                System.out.println("Customer ID: " + parts[0]);
+                System.out.println("Event Name: " + parts[1]);
+                System.out.println("Event Order ID: " + parts[2]);
+                System.out.println("Outfit Description: " + parts[3]);
+                System.out.println("Shipping Status: " + parts[4]);
+                System.out.println("-----------------------------------");
+            }
+        }
+        if (!hasOrders) {
+            System.out.println("No fashion show orders found.");
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading event orders: " + e.getMessage());
+    }
+}
+
+
+// Create Work Orders
+private void handleCreateWorkOrders(Scanner scanner) {
+    System.out.println("\n=== Create Work Orders ===");
+    System.out.print("Enter Registration ID to create a work order: ");
+    String registrationId = scanner.nextLine();
+
+    // System.out.print("Assign this order to Employee ID: ");
+    // String employeeId = scanner.nextLine();
+
+    //createWorkOrder(registrationId, employeeId);
+    // Retrieve outfit description
+    String outfitDescription = getOutfitDescriptionFromEventOrders(registrationId);
+
+    if (outfitDescription == null) {
+        System.out.println("Registration ID not found. Unable to create work order.");
+        return;
+    }
+
+    // Create work order
+    createWorkOrder(registrationId, outfitDescription);
+}
+
+// Retrieve Outfit Description from Event Orders File
+private String getOutfitDescriptionFromEventOrders(String eventOrderId) {
+    try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("\\|");
+            if (parts[2].equals(eventOrderId)) { // Match event order ID
+                return parts[3]; // Outfit description is stored in the fourth column
+            }
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading event orders file: " + e.getMessage());
+    }
+    return null; // Return null if event order ID not found
+}
+
+// Save Work Order to File
+private void createWorkOrder(String registrationId, String outfitDescription) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("work_orders.txt", true))) {
+        writer.write("Registration ID: " + registrationId + " | Outfit Description: " + outfitDescription + " | Status: Pending");
+        writer.newLine();
+        System.out.println("Work order created successfully!");
+    } catch (IOException e) {
+        System.err.println("Error saving work order: " + e.getMessage());
+    }
+}
+
+// private void createWorkOrder(String registrationId, String employeeId) {
+//     try (BufferedWriter writer = new BufferedWriter(new FileWriter("work_orders.txt", true))) {
+//         writer.write("Registration ID: " + registrationId + " | Assigned to Employee ID: " + employeeId + " | Status: Pending");
+//         writer.newLine();
+//         System.out.println("Work order created successfully!");
+//     } catch (IOException e) {
+//         System.err.println("Error saving work order: " + e.getMessage());
+//     }
+// }
+
+private void handleShipping(Scanner scanner) {
+    System.out.println("\n=== Pending Fashion Show Orders ===");
+    try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
+        String line;
+        boolean hasPending = false;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("\\|");
+            if (parts[1].equalsIgnoreCase("Fashion Show") && parts[4].equalsIgnoreCase("Pending")) {
+                hasPending = true;
+                System.out.println("Event Order ID: " + parts[2]);
+                System.out.println("Customer ID: " + parts[0]);
+                System.out.println("Outfit Description: " + parts[3]);
+                System.out.println("-----------------------------------");
+            }
+        }
+        if (!hasPending) {
+            System.out.println("No pending fashion show orders found.");
+            return;
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading event orders: " + e.getMessage());
+    }
+
+    System.out.print("Enter Event Order ID to mark as shipped: ");
+    String eventOrderId = scanner.nextLine();
+
+    markEventOrderAsShipped(eventOrderId);
+}
+
+
+private void markEventOrderAsShipped(String eventOrderId) {
+    List<String> updatedOrders = new ArrayList<>();
+    boolean found = false;
+
+    try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("\\|");
+            if (parts[2].equals(eventOrderId)) { // Match event order ID
+                found = true;
+                updatedOrders.add(parts[0] + "|" + parts[1] + "|" + parts[2] + "|" + parts[3] + "|Shipped");
+            } else {
+                updatedOrders.add(line);
+            }
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading event orders file: " + e.getMessage());
+    }
+
+    if (found) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("event_orders.txt"))) {
+            for (String updatedOrder : updatedOrders) {
+                writer.write(updatedOrder);
+                writer.newLine();
+            }
+            System.out.println("Event order marked as shipped.");
+        } catch (IOException e) {
+            System.err.println("Error updating event orders file: " + e.getMessage());
+        }
+    } else {
+        System.out.println("Event order ID not found.");
+    }
+}
+
+
 
     
 }

@@ -180,7 +180,7 @@ class ReviewSystem {
         Set<String> reviewedProducts = listReviewedProducts();
         for (String product : reviewedProducts) {
             System.out.println("Reviews for Product: " + product);
-            String productId = product.split(" ")[1]; // Extract productId from the string
+            String productId = product.split(" ")[0]; // Extract productId from the string
             System.out.println(productId);//debug
             List<Review> reviews = getProductReviews(productId);
             for (Review review : reviews) {
