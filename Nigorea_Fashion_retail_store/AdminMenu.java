@@ -32,8 +32,9 @@ public class AdminMenu {
             System.out.println("6. Manage Inventory");
             System.out.println("7. Review Customer Orders");
             System.out.println("8. View Company Finances");
-            System.out.println("9. View Reports"); // New Option
-            System.out.println("10. Exit to Main Menu");
+            System.out.println("9. View Reports"); 
+            System.out.println("10. Manage Worker Contracts");
+            System.out.println("11. Exit to Main Menu");
             System.out.print("Enter your choice: ");
 
             if (!scanner.hasNextInt()) {
@@ -79,10 +80,14 @@ public class AdminMenu {
                     break;
 
                 case 9:
-                    handleReports(scanner); // New Reports Functionality
+                    handleReports(scanner); 
                     break;
 
                 case 10:
+                    manageWorkerContracts(scanner);
+                    break;
+
+                case 11:
                     System.out.println("Exiting to main menu...");
                     running = false;
                     break;
@@ -516,6 +521,42 @@ private void displayInventoryReport(List<Map<String, Object>> data) {
                 productName, currentStock, turnoverRate);
     }
 }
+
+
+private void manageWorkerContracts(Scanner scanner) {
+    WorkerManagementSystem workerSystem = new WorkerManagementSystem();
+
+    System.out.println("\n=== Manage Worker Contracts ===");
+    System.out.print("Enter Worker ID: ");
+    String workerId = scanner.nextLine();
+
+    WorkerManagementSystem.Worker worker = workerSystem.getWorkerById(workerId);
+    if (worker != null) {
+        System.out.println("Worker Found: " + worker.toString());
+    } else {
+        System.out.println("Worker not found. Adding new worker.");
+    }
+
+    System.out.print("Enter Name: ");
+    String name = scanner.nextLine();
+    System.out.print("Enter Contract Type (Full-time, Part-time, Contract): ");
+    String contractType = scanner.nextLine();
+    System.out.print("Enter Salary: ");
+    double salary = scanner.nextDouble();
+    System.out.print("Enter Hours Per Week: ");
+    int hoursPerWeek = scanner.nextInt();
+    scanner.nextLine(); // Consume newline
+    System.out.print("Enter Start Date (YYYY-MM-DD): ");
+    String startDate = scanner.nextLine();
+    System.out.print("Enter End Date (YYYY-MM-DD): ");
+    String endDate = scanner.nextLine();
+
+    worker = new WorkerManagementSystem.Worker(workerId, name, contractType, salary, hoursPerWeek, startDate, endDate);
+    workerSystem.addOrUpdateWorker(worker);
+
+    System.out.println("Worker contract updated successfully.");
+}
+
 
 
     
