@@ -15,7 +15,8 @@ public class TerminalInterface {
             System.out.println("3. Admin");
             System.out.println("4. Employee");
             System.out.println("5. Customer Service Agent");
-            System.out.println("6. Exit Store");
+            System.out.println("6. Events");
+            System.out.println("7. Exit Store");
             System.out.print("Enter your choice: ");
 
             int roleChoice = scanner.nextInt();
@@ -47,6 +48,11 @@ public class TerminalInterface {
                     break;
 
                 case 6:
+                    EventsMenu eventsMenu = new EventsMenu();
+                    eventsMenu.showMenu(scanner);
+                    break;
+
+                case 7:
                     System.out.println("Thanks for stopping by! We hope to see you again.....");
                     running = false;
                     break;

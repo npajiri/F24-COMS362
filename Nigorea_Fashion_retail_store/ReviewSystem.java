@@ -100,12 +100,14 @@ class ReviewSystem {
         String productName;
         String reviewText;
         int rating;
+        String customerId; // New field
 
-        public Review(String productId, String productName, String reviewText, int rating) {
+        public Review(String productId, String productName, String reviewText, int rating, String customerId) {
             this.productId = productId;
             this.productName = productName;
             this.reviewText = reviewText;
             this.rating = rating;
+            this.customerId = customerId;
         }
 
         // Getter for rating
@@ -115,13 +117,13 @@ class ReviewSystem {
 
         @Override
         public String toString() {
-            return "Product Name: " + productName + ", Product ID: " + productId +
+            return "Customer ID: " + customerId + ", Product Name: " + productName + ", Product ID: " + productId +
                     ", Rating: " + rating + ", Review: " + reviewText;
         }
     }
 
     // Write a review to the file
-    public void writeReview(String productId, String reviewText, int rating) {
+    public void writeReview(String productId, String reviewText, int rating, String customerId) {
         // Fetch product name from ProductManagement
         String productName = productManagement.getProductName(productId);
         if (productName == null) {
@@ -130,7 +132,7 @@ class ReviewSystem {
         }
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(REVIEWS_FILE, true))) {
-            writer.write(productId + "|" + productName + "|" + rating + "|" + reviewText);
+            writer.write(customerId + "|" + productId + "|" + productName + "|" + rating + "|" + reviewText);
             writer.newLine();
             System.out.println("Review saved successfully for product: " + productName);
         } catch (IOException e) {
@@ -145,9 +147,12 @@ class ReviewSystem {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split("\\|");
-                if (parts[0].equals(productId)) {
-                    reviews.add(new Review(parts[0], parts[1], parts[3], Integer.parseInt(parts[2])));
+                if (parts[1].equals(productId)) { // Adjust index for customerId
+                    reviews.add(new Review(parts[1], parts[2], parts[4], Integer.parseInt(parts[3]), parts[0]));
                 }
+                // if (parts[0].equals(productId)) {
+                //     reviews.add(new Review(parts[0], parts[1], parts[3], Integer.parseInt(parts[2])));
+                // }
             }
         } catch (IOException e) {
             System.err.println("Error reading reviews: " + e.getMessage());
@@ -162,7 +167,7 @@ class ReviewSystem {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split("\\|");
-                productIds.add(parts[0] + " (" + parts[1] + ")");
+                productIds.add(parts[1] + " (" + parts[2] + ")");
             }
         } catch (IOException e) {
             System.err.println("Error reading reviews: " + e.getMessage());
@@ -175,7 +180,8 @@ class ReviewSystem {
         Set<String> reviewedProducts = listReviewedProducts();
         for (String product : reviewedProducts) {
             System.out.println("Reviews for Product: " + product);
-            String productId = product.split(" ")[0]; // Extract productId from the string
+            String productId = product.split(" ")[1]; // Extract productId from the string
+            System.out.println(productId);//debug
             List<Review> reviews = getProductReviews(productId);
             for (Review review : reviews) {
                 System.out.println("  - " + review);
@@ -190,7 +196,10 @@ class ReviewSystem {
         try (BufferedReader reader = new BufferedReader(new FileReader(REVIEWS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (!line.startsWith(productId + "|")) {
+                // if (!line.startsWith(productId + "|")) {
+                //     updatedLines.add(line);
+                String[] parts = line.split("\\|");
+                if (!parts[1].equals(productId)) { // Adjust index for customerId
                     updatedLines.add(line);
                 } else {
                     found = true;

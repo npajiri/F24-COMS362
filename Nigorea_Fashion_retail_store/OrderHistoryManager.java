@@ -5,6 +5,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+
+//ain't necessarily used and needs fixing
 public class OrderHistoryManager {
     // Retrieve order history for a specific customer from a specific file
     public List<Order> getOrderHistory(String customerId, String ordersFile) {
@@ -21,7 +23,7 @@ public class OrderHistoryManager {
                     List<String> products = (parts.length > 4) ? Arrays.asList(parts[4].split(",")) : new ArrayList<>();
     
                     // Add the order directly to the history list
-                    orderHistory.add(new Order(orderDate, totalCost, shippingStatus, orderID, products));
+                    orderHistory.add(new Order(customerId, orderDate, totalCost, shippingStatus, orderID, products));
                 }
             }
         } catch (IOException e) {

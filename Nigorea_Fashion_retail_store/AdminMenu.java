@@ -13,10 +13,12 @@ import java.util.Scanner;
 public class AdminMenu {
     private final ProductManagement productManagement;
     private final ReviewSystem reviewSystem;
+    private final CustomerManagement customerManagement;
 
     public AdminMenu() {
         this.productManagement = new ProductManagement();
         this.reviewSystem = new ReviewSystem();
+        this.customerManagement = new CustomerManagement();
     }
 
     public void showMenu(Scanner scanner) {
@@ -33,7 +35,9 @@ public class AdminMenu {
             System.out.println("7. Review Customer Orders");
             System.out.println("8. View Company Finances");
             System.out.println("9. View Reports"); // New Option
-            System.out.println("10. Exit to Main Menu");
+            System.out.println("10. Manage Worker Contracts");
+            System.out.println("11. View Performance Report");
+            System.out.println("0. Exit to Main Menu");
             System.out.print("Enter your choice: ");
 
             if (!scanner.hasNextInt()) {
@@ -83,6 +87,14 @@ public class AdminMenu {
                     break;
 
                 case 10:
+                    manageWorkerContracts(scanner);
+                    break;
+
+                case 11:
+                    generateWorkerPerformanceReport(scanner);
+                    break;   
+
+                case 0:
                     System.out.println("Exiting to main menu...");
                     running = false;
                     break;
@@ -283,7 +295,33 @@ private void handleReviewCustomerOrders(Scanner scanner) {
     }
 }
 
-private void handleViewOrdersByStatus(String status) {
+// private void handleViewOrdersByStatus(String status) {
+//     System.out.println("\n=== " + status + " Orders ===");
+//     try (BufferedReader reader = new BufferedReader(new FileReader("orders.txt"))) {
+//         String line;
+//         boolean hasOrders = false;
+
+//         while ((line = reader.readLine()) != null) {
+//             String[] parts = line.split("\\|");
+//             if (parts[3].equalsIgnoreCase(status)) {
+//                 hasOrders = true;
+//                 String orderID = parts[0];
+//                 String orderDate = parts[1];
+//                 double totalCost = Double.parseDouble(parts[2]);
+
+//                 System.out.printf("Order ID: %s | Date: %s | Total: $%.2f%n", orderID, orderDate, totalCost);
+//             }
+//         }
+
+//         if (!hasOrders) {
+//             System.out.println("No " + status.toLowerCase() + " orders found.");
+//         }
+//     } catch (IOException e) {
+//         System.err.println("Error reading orders file: " + e.getMessage());
+//     }
+// }
+
+private void handleViewOrdersByStatus(String status, String customerId) {
     System.out.println("\n=== " + status + " Orders ===");
     try (BufferedReader reader = new BufferedReader(new FileReader("orders.txt"))) {
         String line;
@@ -291,7 +329,7 @@ private void handleViewOrdersByStatus(String status) {
 
         while ((line = reader.readLine()) != null) {
             String[] parts = line.split("\\|");
-            if (parts[3].equalsIgnoreCase(status)) {
+            if (parts[3].equalsIgnoreCase(status) && parts[5].equals(customerId)) {
                 hasOrders = true;
                 String orderID = parts[0];
                 String orderDate = parts[1];
@@ -302,15 +340,45 @@ private void handleViewOrdersByStatus(String status) {
         }
 
         if (!hasOrders) {
-            System.out.println("No " + status.toLowerCase() + " orders found.");
+            System.out.println("No " + status.toLowerCase() + " orders found for Customer ID: " + customerId);
         }
     } catch (IOException e) {
         System.err.println("Error reading orders file: " + e.getMessage());
     }
 }
 
+private void handleViewOrdersByStatus(String status) {
+    handleViewOrdersByStatus(status, null);
+}
+
 private void handleShipOrder(Scanner scanner) {
-    handleViewOrdersByStatus("Pending");
+    System.out.println("Do you want to view:");
+    System.out.println("1. All Pending Orders");
+    System.out.println("2. Specific Customer's Pending Orders");
+    System.out.print("Enter your choice: ");
+
+    int choice = scanner.nextInt();
+    scanner.nextLine(); // Consume newline
+
+    String customerId = null;
+
+    if (choice == 2) {
+        System.out.print("Enter Customer ID: ");
+        customerId = scanner.nextLine();
+        
+        // Validate that the Customer ID exists
+        if (!customerManagement.customerExists(customerId)) {
+            System.out.println("Invalid Customer ID. Returning to menu...");
+            return;
+        }
+    } else if (choice != 1) {
+        System.out.println("Invalid choice. Returning to menu...");
+        return;
+    }
+    
+
+    // Display orders based on choice
+    handleViewOrdersByStatus("Pending", customerId);
 
     System.out.println("\n=== Ship an Order ===");
     System.out.print("Enter Order ID to ship: ");
@@ -324,6 +392,57 @@ private void handleShipOrder(Scanner scanner) {
     }
 }
 
+
+// private void handleShipOrder(Scanner scanner) {
+//     handleViewOrdersByStatus("Pending");
+
+//     System.out.println("\n=== Ship an Order ===");
+//     System.out.print("Enter Order ID to ship: ");
+//     String orderID = scanner.nextLine();
+
+//     boolean updated = updateOrderStatus(orderID, "Shipped");
+//     if (updated) {
+//         System.out.println("Order " + orderID + " has been marked as shipped.");
+//     } else {
+//         System.out.println("Order ID not found or already shipped.");
+//     }
+// }
+
+// private boolean updateOrderStatus(String orderID, String newStatus) {
+//     List<String> updatedLines = new ArrayList<>();
+//     boolean found = false;
+
+//     try (BufferedReader reader = new BufferedReader(new FileReader("orders.txt"))) {
+//         String line;
+//         while ((line = reader.readLine()) != null) {
+//             String[] parts = line.split("\\|");
+//             if (parts[0].equals(orderID) && parts[3].equalsIgnoreCase("Pending")) {
+//                 // Update the order status but preserve product IDs
+//                 String updatedLine = parts[0] + "|" + parts[1] + "|" + parts[2] + "|" + newStatus + "|" + parts[4];
+//                 updatedLines.add(updatedLine);
+//                 found = true;
+//             } else {
+//                 updatedLines.add(line); // Keep the line unchanged if it's not the target order
+//             }
+//         }
+//     } catch (IOException e) {
+//         System.err.println("Error reading orders file: " + e.getMessage());
+//         return false;
+//     }
+
+//     try (BufferedWriter writer = new BufferedWriter(new FileWriter("orders.txt"))) {
+//         for (String updatedLine : updatedLines) {
+//             writer.write(updatedLine);
+//             writer.newLine();
+//         }
+//     } catch (IOException e) {
+//         System.err.println("Error updating orders file: " + e.getMessage());
+//         return false;
+//     }
+
+//     return found;
+// }
+
 private boolean updateOrderStatus(String orderID, String newStatus) {
     List<String> updatedLines = new ArrayList<>();
     boolean found = false;
@@ -333,12 +452,13 @@ private boolean updateOrderStatus(String orderID, String newStatus) {
         while ((line = reader.readLine()) != null) {
             String[] parts = line.split("\\|");
             if (parts[0].equals(orderID) && parts[3].equalsIgnoreCase("Pending")) {
-                // Update the order status but preserve product IDs
-                String updatedLine = parts[0] + "|" + parts[1] + "|" + parts[2] + "|" + newStatus + "|" + parts[4];
+                // Preserve customer ID and other details
+                String updatedLine = parts[0] + "|" + parts[1] + "|" + parts[2] + "|" + 
+                                     newStatus + "|" + parts[4] + "|" + parts[5];
                 updatedLines.add(updatedLine);
                 found = true;
             } else {
-                updatedLines.add(line); // Keep the line unchanged if it's not the target order
+                updatedLines.add(line);
             }
         }
     } catch (IOException e) {
@@ -358,6 +478,7 @@ private boolean updateOrderStatus(String orderID, String newStatus) {
 
     return found;
 }
+
 
 
 private void handleViewFinances() {
@@ -517,6 +638,60 @@ private void displayInventoryReport(List<Map<String, Object>> data) {
     }
 }
 
+
+private void manageWorkerContracts(Scanner scanner) {
+    WorkerManagementSystem workerSystem = new WorkerManagementSystem();
+
+    System.out.println("\n=== Manage Worker Contracts ===");
+    System.out.print("Enter Worker ID: ");
+    String workerId = scanner.nextLine();
+
+    WorkerManagementSystem.Worker worker = workerSystem.getWorkerById(workerId);
+    if (worker != null) {
+        System.out.println("Worker Found: " + worker.toString());
+    } else {
+        System.out.println("Worker not found. Adding new worker.");
+    }
+
+    System.out.print("Enter Name: ");
+    String name = scanner.nextLine();
+    System.out.print("Enter Contract Type (Full-time, Part-time, Contract): ");
+    String contractType = scanner.nextLine();
+    System.out.print("Enter Salary: ");
+    double salary = scanner.nextDouble();
+    System.out.print("Enter Hours Per Week: ");
+    int hoursPerWeek = scanner.nextInt();
+    scanner.nextLine(); // Consume newline
+    System.out.print("Enter Start Date (YYYY-MM-DD): ");
+    String startDate = scanner.nextLine();
+    System.out.print("Enter End Date (YYYY-MM-DD): ");
+    String endDate = scanner.nextLine();
+
+    worker = new WorkerManagementSystem.Worker(workerId, name, contractType, salary, hoursPerWeek, startDate, endDate);
+    workerSystem.addOrUpdateWorker(worker);
+
+    System.out.println("Worker contract updated successfully.");
+}
+
+private void generateWorkerPerformanceReport(Scanner scanner) {
+    ReportManager reportManager = new ReportManager(new Database());
+
+    System.out.println("\n=== Generate Worker Performance Report ===");
+    System.out.print("Enter Start Date (YYYY-MM-DD): ");
+    String startDate = scanner.nextLine();
+    System.out.print("Enter End Date (YYYY-MM-DD): ");
+    String endDate = scanner.nextLine();
+
+    DetailedReport report = reportManager.generateWorkerPerformanceReport(startDate, endDate);
+    if (report != null) {
+        System.out.println("Report Generated Successfully:");
+        for (String detail : report.getDetails()) {
+            System.out.println(detail);
+        }
+    } else {
+        System.out.println("Failed to generate report. Please check the parameters.");
+    }
+}
 
     
 }
