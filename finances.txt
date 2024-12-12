@@ -1,0 +1,12 @@
+Date: Wed Nov 20 18:46:37 CST 2024 | Earnings(Customer Orders): $206.71 | Spending(Supplier Orders): -115.90
+Date: Tue Dec 03 14:59:54 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): -115.90
+Date: Tue Dec 03 15:01:35 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): 0.00
+Date: Tue Dec 03 15:03:25 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): 0.00
+Date: Tue Dec 03 15:23:52 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): 115.90
+Date: Tue Dec 03 15:25:49 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): 115.90
+Date: Tue Dec 03 15:53:11 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): 115.90
+Date: Tue Dec 03 15:59:59 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): 231.80
+Date: Tue Dec 03 16:05:52 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): 347.70
+Date: Tue Dec 03 16:07:47 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): $463.60
+Date: Tue Dec 03 17:07:21 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): $579.50
+Date: Mon Dec 09 11:59:16 CST 2024 | Earnings(Customer Orders): $283.34 | Spending(Supplier Orders): $579.50

@@ -1,0 +1,4 @@
+C001|P001|Hermes shades|5|GREAT SHADES!!!!
+C001|P002|Nigorea jeans|5|First jeans to fit my athletic build. 10/10, definitely recommend
+C001|P002|Nigorea jeans|4|Nice jeans
+C002|P001|Hermes shades|2|didn't really block the sun for me
