@@ -632,7 +632,7 @@ public class CustomerMenu {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split("\\|");
-                if (parts[0].equals("Customer ID: " + customerId)) {
+                if (parts[0].equals("Customer ID: " + customerId + " ")) {
                     hasNotifications = true;
                     System.out.println(line);
                 }
