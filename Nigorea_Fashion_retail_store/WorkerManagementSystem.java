@@ -145,4 +145,27 @@ public class WorkerManagementSystem {
             System.err.println("Error saving workers to file: " + e.getMessage());
         }
     }
+
+    public boolean removeWorker(String workerId) {
+        List<Worker> workers = getAllWorkers();
+        boolean found = false;
+    
+        // Filter out the worker with the specified ID
+        List<Worker> updatedWorkers = new ArrayList<>();
+        for (Worker worker : workers) {
+            if (worker.getWorkerId().equals(workerId)) {
+                found = true;
+            } else {
+                updatedWorkers.add(worker);
+            }
+        }
+    
+        if (found) {
+            saveWorkersToFile(updatedWorkers);
+        }
+    
+        return found; // Return true if the worker was found and removed, false otherwise
+    }
+    
+    
 }

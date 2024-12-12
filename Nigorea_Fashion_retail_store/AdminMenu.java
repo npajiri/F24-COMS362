@@ -3,6 +3,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -653,6 +655,7 @@ private void manageWorkerContracts(Scanner scanner) {
         System.out.println("\n=== Manage Worker Contracts ===");
         System.out.println("1. Find Worker");
         System.out.println("2. Add New Worker");
+        System.out.println("3. Remove Worker");
         System.out.println("0. Exit to Admin Menu");
         System.out.print("Enter your choice: ");
         String choice = scanner.nextLine();
@@ -663,6 +666,9 @@ private void manageWorkerContracts(Scanner scanner) {
                 break;
             case "2":
                 addNewWorker(scanner, workerSystem);
+                break;
+            case "3":
+                removeWorker(scanner, workerSystem);
                 break;
             case "0":
                 return; // Exit back to Admin Menu
@@ -771,28 +777,55 @@ private String generateNextWorkerId(WorkerManagementSystem workerSystem) {
     // Generate the next Worker ID
     return "W" + String.format("%03d", maxId + 1);
 }
+private void removeWorker(Scanner scanner, WorkerManagementSystem workerSystem) {
+    System.out.print("\nEnter Worker ID to Remove: ");
+    String workerId = scanner.nextLine();
 
-
-
+    boolean removed = workerSystem.removeWorker(workerId);
+    if (removed) {
+        System.out.println("Worker with ID " + workerId + " has been successfully removed.");
+    } else {
+        System.out.println("Worker with ID " + workerId + " not found.");
+    }
+}
 
 
 private void generateWorkerPerformanceReport(Scanner scanner) {
     ReportManager reportManager = new ReportManager(new Database());
 
     System.out.println("\n=== Generate Worker Performance Report ===");
-    System.out.print("Enter Start Date (YYYY-MM-DD): ");
-    String startDate = scanner.nextLine();
-    System.out.print("Enter End Date (YYYY-MM-DD): ");
-    String endDate = scanner.nextLine();
+
+    // Validate the start and end dates
+    String startDate = validateDateInput(scanner, "Enter Start Date (YYYY-MM-DD): ");
+    String endDate = validateDateInput(scanner, "Enter End Date (YYYY-MM-DD): ");
 
     DetailedReport report = reportManager.generateWorkerPerformanceReport(startDate, endDate);
-    if (report != null) {
+
+    if (report != null && !report.getDetails().isEmpty()) {
         System.out.println("Report Generated Successfully:");
         for (String detail : report.getDetails()) {
             System.out.println(detail);
         }
     } else {
-        System.out.println("Failed to generate report. Please check the parameters.");
+        System.out.println("No performance data found for the specified date range.");
+    }
+}
+
+
+private String validateDateInput(Scanner scanner, String prompt) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    dateFormat.setLenient(false); // Strict date parsing
+
+    while (true) {
+        System.out.print(prompt);
+        String inputDate = scanner.nextLine();
+
+        try {
+            dateFormat.parse(inputDate); // Validate the date format
+            return inputDate; // Return the valid date
+        } catch (ParseException e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+        }
     }
 }
 
