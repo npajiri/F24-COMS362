@@ -3,6 +3,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -792,19 +794,38 @@ private void generateWorkerPerformanceReport(Scanner scanner) {
     ReportManager reportManager = new ReportManager(new Database());
 
     System.out.println("\n=== Generate Worker Performance Report ===");
-    System.out.print("Enter Start Date (YYYY-MM-DD): ");
-    String startDate = scanner.nextLine();
-    System.out.print("Enter End Date (YYYY-MM-DD): ");
-    String endDate = scanner.nextLine();
+
+    // Validate the start and end dates
+    String startDate = validateDateInput(scanner, "Enter Start Date (YYYY-MM-DD): ");
+    String endDate = validateDateInput(scanner, "Enter End Date (YYYY-MM-DD): ");
 
     DetailedReport report = reportManager.generateWorkerPerformanceReport(startDate, endDate);
-    if (report != null) {
+
+    if (report != null && !report.getDetails().isEmpty()) {
         System.out.println("Report Generated Successfully:");
         for (String detail : report.getDetails()) {
             System.out.println(detail);
         }
     } else {
-        System.out.println("Failed to generate report. Please check the parameters.");
+        System.out.println("No performance data found for the specified date range.");
+    }
+}
+
+
+private String validateDateInput(Scanner scanner, String prompt) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    dateFormat.setLenient(false); // Strict date parsing
+
+    while (true) {
+        System.out.print(prompt);
+        String inputDate = scanner.nextLine();
+
+        try {
+            dateFormat.parse(inputDate); // Validate the date format
+            return inputDate; // Return the valid date
+        } catch (ParseException e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+        }
     }
 }
 
