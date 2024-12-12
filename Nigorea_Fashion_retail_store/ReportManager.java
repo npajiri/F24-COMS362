@@ -106,17 +106,30 @@ public class ReportManager {
     }
 
     public DetailedReport generateWorkerPerformanceReport(String startDate, String endDate) {
-        PerformanceDataHandler dataHandler = new PerformanceDataHandler();
-        List<Map<String, Object>> performanceData = dataHandler.getWorkerPerformanceData(startDate, endDate);
+        PerformanceDataHandler performanceDataHandler = new PerformanceDataHandler();
+        List<Map<String, Object>> performanceData = performanceDataHandler.getWorkerPerformanceData(startDate, endDate);
     
-        List<String> details = new ArrayList<>();
-        for (Map<String, Object> record : performanceData) {
-            details.add("Worker: " + record.get("workerName") + ", Hours Worked: " + record.get("hoursWorked") +
-                        ", Sales Contributions: $" + record.get("salesContribution"));
+        if (performanceData.isEmpty()) {
+            System.out.println("No performance data found for the specified date range.");
+            return new DetailedReport("Worker Performance Report", startDate, endDate, new ArrayList<>());
         }
     
-        return new DetailedReport(new Report("WORKER_PERF_" + System.currentTimeMillis(), "Worker Performance", new Date()), details);
+        // Create a report data structure
+        List<String> reportDetails = new ArrayList<>();
+        for (Map<String, Object> record : performanceData) {
+            String detail = String.format(
+                "Worker: %s, Hours Worked: %d, Sales Contributions: $%.2f",
+                record.get("workerName"),
+                record.get("hoursWorked"),
+                record.get("salesContribution")
+            );
+            reportDetails.add(detail);
+        }
+    
+        // Create and return a DetailedReport object
+        return new DetailedReport("Worker Performance Report", startDate, endDate, reportDetails);
     }
+    
     
 }
     
