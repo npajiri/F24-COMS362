@@ -2,7 +2,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 public class ReportManager {
     private final Database database;
@@ -106,34 +110,87 @@ public class ReportManager {
         // File writing logic could be implemented here
     }
 
-    public DetailedReport generateWorkerPerformanceReport(String startDate, String endDate) {
-        PerformanceDataHandler performanceDataHandler = new PerformanceDataHandler();
-        List<Map<String, Object>> performanceData = performanceDataHandler.getWorkerPerformanceData(startDate, endDate);
-
-        if (performanceData.isEmpty()) {
-            return new DetailedReport("Worker Performance Report", startDate, endDate, List.of("No performance data found for the specified date range."));
+    public Map<String, String> loadWorkerRoles() {
+    Map<String, String> workerRoles = new HashMap<>();
+    try (BufferedReader reader = new BufferedReader(new FileReader("workers.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("\\|"); // Split by '|'
+            if (parts.length >= 3) { // Ensure sufficient columns exist
+                String workerId = parts[0]; // WorkerID
+                String role = parts[2];     // Role
+                workerRoles.put(workerId, role); // Map WorkerID to Role
+            }
         }
+    } catch (IOException e) {
+        System.out.println("Error reading workers.txt: " + e.getMessage());
+    }
+    return workerRoles;
+}
 
+
+    public DetailedReport generateWorkerPerformanceReport(String startDate, String endDate, String roleFilter, String sortBy) {
+        PerformanceDataHandler performanceDataHandler = new PerformanceDataHandler();
+        List<Map<String, Object>> performanceData = new ArrayList<>(performanceDataHandler.getWorkerPerformanceData(startDate, endDate));
+        Map<String, String> workerRoles = loadWorkerRoles(); // Load worker roles from workers.txt
+    
+        if (performanceData.isEmpty()) {
+            return new DetailedReport("Worker Performance Report", startDate, endDate, List.of("No performance data found."));
+        }
+    
+        // Filter by role using workers.txt
+        if (roleFilter != null) {
+            performanceData = performanceData.stream()
+                .filter(record -> {
+                    String workerId = (String) record.get("workerId");
+                    String role = workerRoles.get(workerId);
+                    return role != null && role.equalsIgnoreCase(roleFilter);
+                })
+                .toList();
+            performanceData = new ArrayList<>(performanceData); // Convert to mutable
+        }
+    
         // Aggregate data for each worker
         Map<String, WorkerPerformance> workerPerformanceMap = new HashMap<>();
         for (Map<String, Object> record : performanceData) {
             String workerName = (String) record.get("workerName");
             int hoursWorked = (int) record.get("hoursWorked");
             double salesContribution = (double) record.get("salesContribution");
-
-            // Update or add performance data for the worker
+    
             WorkerPerformance performance = workerPerformanceMap.getOrDefault(workerName, new WorkerPerformance(workerName, 0, 0.0));
             performance.addPerformance(hoursWorked, salesContribution);
             workerPerformanceMap.put(workerName, performance);
         }
-
+    
+        // Sort by criteria if specified
+        List<WorkerPerformance> workerPerformances = new ArrayList<>(workerPerformanceMap.values());
+        if ("hours".equals(sortBy)) {
+            workerPerformances.sort(Comparator.comparingInt(WorkerPerformance::getTotalHoursWorked).reversed());
+        } else if ("sales".equals(sortBy)) {
+            workerPerformances.sort(Comparator.comparingDouble(WorkerPerformance::getTotalSalesContribution).reversed());
+        }
+    
         // Generate report details
-        List<String> reportDetails = workerPerformanceMap.values().stream()
-                .map(WorkerPerformance::toString)
-                .toList();
-
+        List<String> reportDetails = workerPerformances.stream()
+            .map(WorkerPerformance::toString)
+            .toList(); // Returns an immutable list
+        reportDetails = new ArrayList<>(reportDetails); // Convert to mutable for further operations
+    
+        // Add summary
+        int totalWorkers = workerPerformances.size();
+        int totalHours = workerPerformances.stream().mapToInt(WorkerPerformance::getTotalHoursWorked).sum();
+        double totalSales = workerPerformances.stream().mapToDouble(WorkerPerformance::getTotalSalesContribution).sum();
+        reportDetails.add("");
+        reportDetails.add(String.format("Total Workers: %d", totalWorkers));
+        reportDetails.add(String.format("Total Hours Worked: %d", totalHours));
+        reportDetails.add(String.format("Total Sales Contributions: $%.2f", totalSales));
+        reportDetails.add(String.format("Average Hours Worked: %.2f", totalWorkers > 0 ? (double) totalHours / totalWorkers : 0));
+        reportDetails.add(String.format("Average Sales Contributions: $%.2f", totalWorkers > 0 ? totalSales / totalWorkers : 0));
+    
         return new DetailedReport("Worker Performance Report", startDate, endDate, reportDetails);
     }
+    
+    
 
     
     
