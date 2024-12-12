@@ -653,6 +653,7 @@ private void manageWorkerContracts(Scanner scanner) {
         System.out.println("\n=== Manage Worker Contracts ===");
         System.out.println("1. Find Worker");
         System.out.println("2. Add New Worker");
+        System.out.println("3. Remove Worker");
         System.out.println("0. Exit to Admin Menu");
         System.out.print("Enter your choice: ");
         String choice = scanner.nextLine();
@@ -663,6 +664,9 @@ private void manageWorkerContracts(Scanner scanner) {
                 break;
             case "2":
                 addNewWorker(scanner, workerSystem);
+                break;
+            case "3":
+                removeWorker(scanner, workerSystem);
                 break;
             case "0":
                 return; // Exit back to Admin Menu
@@ -771,9 +775,17 @@ private String generateNextWorkerId(WorkerManagementSystem workerSystem) {
     // Generate the next Worker ID
     return "W" + String.format("%03d", maxId + 1);
 }
+private void removeWorker(Scanner scanner, WorkerManagementSystem workerSystem) {
+    System.out.print("\nEnter Worker ID to Remove: ");
+    String workerId = scanner.nextLine();
 
-
-
+    boolean removed = workerSystem.removeWorker(workerId);
+    if (removed) {
+        System.out.println("Worker with ID " + workerId + " has been successfully removed.");
+    } else {
+        System.out.println("Worker with ID " + workerId + " not found.");
+    }
+}
 
 
 private void generateWorkerPerformanceReport(Scanner scanner) {
