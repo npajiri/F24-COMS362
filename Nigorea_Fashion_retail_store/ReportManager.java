@@ -99,7 +99,7 @@ public class ReportManager {
 
         return new DetailedReport(reportMetadata, details);
     }
-
+    
     public void exportReport(DetailedReport detailedReport) {
         System.out.println("Exporting report: " + detailedReport.getReportMetadata().getReportType());
         // File writing logic could be implemented here
