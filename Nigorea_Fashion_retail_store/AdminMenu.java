@@ -799,15 +799,29 @@ private void generateWorkerPerformanceReport(Scanner scanner) {
     String startDate = validateDateInput(scanner, "Enter Start Date (YYYY-MM-DD): ");
     String endDate = validateDateInput(scanner, "Enter End Date (YYYY-MM-DD): ");
 
-    DetailedReport report = reportManager.generateWorkerPerformanceReport(startDate, endDate);
+    System.out.println("Do you want to filter by worker role? (yes/no): ");
+    String filterChoice = scanner.nextLine().trim().toLowerCase();
+    String roleFilter = null;
+    if (filterChoice.equals("yes")) {
+        System.out.print("Enter Worker Role (e.g., Seller, Manager): ");
+        roleFilter = scanner.nextLine();
+    }
+
+    System.out.println("Do you want to sort the report? (yes/no): ");
+    String sortChoice = scanner.nextLine().trim().toLowerCase();
+    String sortBy = null;
+    if (sortChoice.equals("yes")) {
+        System.out.print("Sort by (hours/sales): ");
+        sortBy = scanner.nextLine().trim().toLowerCase();
+    }
+
+    DetailedReport report = reportManager.generateWorkerPerformanceReport(startDate, endDate, roleFilter, sortBy);
 
     if (report != null && !report.getDetails().isEmpty()) {
         System.out.println("Report Generated Successfully:");
-        for (String detail : report.getDetails()) {
-            System.out.println(detail);
-        }
+        System.out.println(report.toString());
     } else {
-        System.out.println("No performance data found for the specified date range.");
+        System.out.println("No performance data found for the specified date range or criteria.");
     }
 }
 
