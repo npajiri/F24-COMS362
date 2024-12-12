@@ -1,6 +1,7 @@
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.ArrayList;
 
 public class ReportManager {
@@ -108,27 +109,32 @@ public class ReportManager {
     public DetailedReport generateWorkerPerformanceReport(String startDate, String endDate) {
         PerformanceDataHandler performanceDataHandler = new PerformanceDataHandler();
         List<Map<String, Object>> performanceData = performanceDataHandler.getWorkerPerformanceData(startDate, endDate);
-    
+
         if (performanceData.isEmpty()) {
-            System.out.println("No performance data found for the specified date range.");
-            return new DetailedReport("Worker Performance Report", startDate, endDate, new ArrayList<>());
+            return new DetailedReport("Worker Performance Report", startDate, endDate, List.of("No performance data found for the specified date range."));
         }
-    
-        // Create a report data structure
-        List<String> reportDetails = new ArrayList<>();
+
+        // Aggregate data for each worker
+        Map<String, WorkerPerformance> workerPerformanceMap = new HashMap<>();
         for (Map<String, Object> record : performanceData) {
-            String detail = String.format(
-                "Worker: %s, Hours Worked: %d, Sales Contributions: $%.2f",
-                record.get("workerName"),
-                record.get("hoursWorked"),
-                record.get("salesContribution")
-            );
-            reportDetails.add(detail);
+            String workerName = (String) record.get("workerName");
+            int hoursWorked = (int) record.get("hoursWorked");
+            double salesContribution = (double) record.get("salesContribution");
+
+            // Update or add performance data for the worker
+            WorkerPerformance performance = workerPerformanceMap.getOrDefault(workerName, new WorkerPerformance(workerName, 0, 0.0));
+            performance.addPerformance(hoursWorked, salesContribution);
+            workerPerformanceMap.put(workerName, performance);
         }
-    
-        // Create and return a DetailedReport object
+
+        // Generate report details
+        List<String> reportDetails = workerPerformanceMap.values().stream()
+                .map(WorkerPerformance::toString)
+                .toList();
+
         return new DetailedReport("Worker Performance Report", startDate, endDate, reportDetails);
     }
+
     
     
 }
