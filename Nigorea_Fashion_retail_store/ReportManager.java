@@ -100,14 +100,22 @@ public class ReportManager {
         return new DetailedReport(reportMetadata, details);
     }
 
-    // Export a report (placeholder for actual implementation)
     public void exportReport(DetailedReport detailedReport) {
         System.out.println("Exporting report: " + detailedReport.getReportMetadata().getReportType());
         // File writing logic could be implemented here
     }
 
     public DetailedReport generateWorkerPerformanceReport(String startDate, String endDate) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'generateWorkerPerformanceReport'");
+        PerformanceDataHandler dataHandler = new PerformanceDataHandler();
+        List<Map<String, Object>> performanceData = dataHandler.getWorkerPerformanceData(startDate, endDate);
+    
+        List<String> details = new ArrayList<>();
+        for (Map<String, Object> record : performanceData) {
+            details.add("Worker: " + record.get("workerName") + ", Hours Worked: " + record.get("hoursWorked") +
+                        ", Sales Contributions: $" + record.get("salesContribution"));
+        }
+    
+        return new DetailedReport(new Report("WORKER_PERF_" + System.currentTimeMillis(), "Worker Performance", new Date()), details);
     }
+    
 }
