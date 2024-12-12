@@ -1,0 +1,7 @@
+Gucci Handbag|2499.99|5|2024-01-10
+Prada Shoes|1299.99|3|2024-01-15
+Armani Suit|3499.99|2|2024-01-12
+Louis Vuitton Scarf|499.99|10|2024-01-18
+Chanel Perfume|199.99|20|2024-01-20
+Versace Sunglasses|299.99|8|2024-01-25
+Balenciaga Sneakers|999.99|6|2024-01-30

@@ -1,0 +1,7 @@
+Gucci Handbag|15|50.00
+Prada Shoes|10|40.00
+Armani Suit|5|30.00
+Louis Vuitton Scarf|20|70.00
+Chanel Perfume|50|80.00
+Versace Sunglasses|12|60.00
+Balenciaga Sneakers|8|45.00

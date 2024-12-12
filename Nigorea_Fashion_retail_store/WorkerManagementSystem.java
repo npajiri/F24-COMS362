@@ -2,21 +2,23 @@ import java.io.*;
 import java.util.*;
 
 public class WorkerManagementSystem {
-    private final String WORKERS_FILE = "workers.txt"; // File to store worker data
+    private static final String WORKERS_FILE = "workers.txt"; // File to store worker data
 
     // Worker class representing a worker's contract details
     public static class Worker {
         private String workerId;
         private String name;
         private String contractType; // Full-time, Part-time, Contract
+        private String position; 
         private double salary;
         private int hoursPerWeek;
         private String startDate;
         private String endDate;
 
-        public Worker(String workerId, String name, String contractType, double salary, int hoursPerWeek, String startDate, String endDate) {
+        public Worker(String workerId, String name, String position, String contractType, double salary, int hoursPerWeek, String startDate, String endDate) {
             this.workerId = workerId;
             this.name = name;
+            this.position = position;
             this.contractType = contractType;
             this.salary = salary;
             this.hoursPerWeek = hoursPerWeek;
@@ -24,14 +26,57 @@ public class WorkerManagementSystem {
             this.endDate = endDate;
         }
 
+        public String getWorkerId() {
+            return workerId;
+        }
+    
+        public String getName() {
+            return name;
+        }
+    
+        public String getPosition() {
+            return position;
+        }
+    
+        public String getContractType() {
+            return contractType;
+        }
+    
+        public double getSalary() {
+            return salary;
+        }
+    
+        public int getHoursPerWeek() {
+            return hoursPerWeek;
+        }
+    
+        public String getStartDate() {
+            return startDate;
+        }
+    
+        public String getEndDate() {
+            return endDate;
+        }
+
         @Override
         public String toString() {
-            return workerId + "|" + name + "|" + contractType + "|" + salary + "|" + hoursPerWeek + "|" + startDate + "|" + endDate;
+            return workerId + "|" + name + "|" + position + "|" + contractType + "|" + salary + "|" + hoursPerWeek + "|" + startDate + "|" + endDate;
         }
 
         public static Worker fromString(String line) {
             String[] parts = line.split("\\|");
-            return new Worker(parts[0], parts[1], parts[2], Double.parseDouble(parts[3]), Integer.parseInt(parts[4]), parts[5], parts[6]);
+            if (parts.length != 8) { // Updated to 8 fields
+                throw new IllegalArgumentException("Invalid data format in workers.txt");
+            }
+            String workerId = parts[0];
+            String name = parts[1];
+            String position = parts[2];
+            String contractType = parts[3];
+            double salary = Double.parseDouble(parts[4]);
+            int hoursPerWeek = Integer.parseInt(parts[5]);
+            String startDate = parts[6];
+            String endDate = parts[7];
+            return new Worker(workerId, name, position, contractType, salary, hoursPerWeek, startDate, endDate);
         }
     }
 
