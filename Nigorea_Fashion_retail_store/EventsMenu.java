@@ -54,14 +54,35 @@ public class EventsMenu {
             return;
         }
 
+        int registrationFee = 50;
         System.out.println("Welcome to our exclusive fashion shows!");
-        System.out.println("The registration fee is $50.");
-        System.out.print("Enter amount to pay: ");
-        double payment = scanner.nextDouble();
-        scanner.nextLine(); // Consume newline
+        System.out.println("The registration fee is $"+ registrationFee);
+        int payment = 0;
+        String input = "";
+        boolean exitPaymentLoop = false;
 
-        if (payment != 50.0) {
-            System.out.println("Incorrect amount. Please try again.");
+            do {
+            System.out.print("Enter amount to pay (required) or type X to exit: ");
+            input = scanner.nextLine().trim();
+
+            if (input.equalsIgnoreCase("X")) {
+                exitPaymentLoop = true;
+                break;
+            }
+
+            try {
+                payment = Integer.parseInt(input);
+                if (payment != registrationFee) {
+                    System.out.println("Incorrect amount. Please try again.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a numeric value of '50' or 'X' to exit.");
+            }
+
+        } while (payment != registrationFee && !exitPaymentLoop);
+
+        if (exitPaymentLoop) {
+            System.out.println("Payment process cancelled.");
             return;
         }
 
@@ -72,15 +93,15 @@ public class EventsMenu {
         System.out.print("Describe your desired outfit: ");
         String outfitDescription = scanner.nextLine();
 
-        saveFashionShowRegistration(customerId, registrationId, outfitDescription);
+        saveFashionShowRegistration(customerId, registrationId, payment, outfitDescription);
 
         // Save the event order
         saveEventOrder(customerId, "Fashion Show", registrationId, outfitDescription, "Pending");
     }
 
-    private void saveFashionShowRegistration(String customerId, String registrationId, String outfitDescription) {
+    private void saveFashionShowRegistration(String customerId, String registrationId, int payment, String outfitDescription) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("fashion_show_registrations.txt", true))) {
-            writer.write(customerId + "|" + registrationId + "|" + outfitDescription);
+            writer.write(customerId + "|" + registrationId + "|" + payment + "|" + outfitDescription);
             writer.newLine();
             System.out.println("Your registration has been saved successfully.");
         } catch (IOException e) {

@@ -60,55 +60,170 @@ public class EmployeeMenu {
     }
 
     private void handleWorkOrders(Scanner scanner) {
-    System.out.println("\n=== Work Orders ===");
-    try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            System.out.println(line);
-        }
-    } catch (IOException e) {
-        System.err.println("Error reading work orders: " + e.getMessage());
-    }
-
-    System.out.print("Enter Registration ID to mark as completed: ");
-    String registrationId = scanner.nextLine();
-
-    markWorkOrderAsCompleted(registrationId);
-}
-
-// Mark work order as completed
-private void markWorkOrderAsCompleted(String registrationId) {
-    List<String> updatedOrders = new ArrayList<>();
-    boolean found = false;
-
-    try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (line.contains("Registration ID: " + registrationId)) {
-                found = true;
-                updatedOrders.add(line + " | Status: Completed");
-            } else {
-                updatedOrders.add(line);
+        System.out.println("\n=== Work Orders ===");
+        
+        while (true) {
+            System.out.println("\n1. View Pending Orders");
+            System.out.println("2. View Completed Orders");
+            System.out.println("3. View All Orders");
+            System.out.println("4. Mark Order as Completed");
+            System.out.println("5. Return to Admin Menu");
+            System.out.print("Enter your choice: ");
+    
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+    
+            switch (choice) {
+                case 1:
+                    viewOrdersByStatus("Pending");
+                    break;
+    
+                case 2:
+                    viewOrdersByStatus("Completed");
+                    break;
+    
+                case 3:
+                    viewAllOrders();
+                    break;
+    
+                case 4:
+                      System.out.print("Enter Registration ID to mark as completed: ");
+                    String registrationId = scanner.nextLine();
+                    markWorkOrderAsCompleted(registrationId);
+                    break;
+    
+                case 5:
+                    System.out.println("Returning to Admin Menu...");
+                    return;
+    
+                default:
+                    System.out.println("Invalid choice. Please try again.");
             }
         }
-    } catch (IOException e) {
-        System.err.println("Error reading work orders: " + e.getMessage());
-    }
+    } 
 
-    if (found) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("work_orders.txt"))) {
-            for (String updatedOrder : updatedOrders) {
-                writer.write(updatedOrder);
-                writer.newLine();
+    // private void handleWorkOrders(Scanner scanner) {
+    // System.out.println("\n=== Work Orders ===");
+    // try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
+    //     String line;
+    //     while ((line = reader.readLine()) != null) {
+    //         System.out.println(line);
+    //     }
+    // } catch (IOException e) {
+    //     System.err.println("Error reading work orders: " + e.getMessage());
+    // }
+
+    // System.out.print("Enter Registration ID to mark as completed: ");
+    // String registrationId = scanner.nextLine();
+
+    // markWorkOrderAsCompleted(registrationId);
+    // }
+
+    private void viewOrdersByStatus(String status) {
+        System.out.println("\n=== " + status + " Work Orders ===");
+        try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
+            String line;
+            boolean hasOrders = false;
+    
+            while ((line = reader.readLine()) != null) {
+                if (line.contains("Status: " + status)) {
+                    System.out.println(line);
+                    hasOrders = true;
+                }
             }
-            System.out.println("Work order marked as completed.");
+    
+            if (!hasOrders) {
+                System.out.println("No " + status.toLowerCase() + " work orders found.");
+            }
         } catch (IOException e) {
-            System.err.println("Error updating work orders: " + e.getMessage());
+            System.err.println("Error reading work orders: " + e.getMessage());
         }
-    } else {
-        System.out.println("Registration ID not found.");
     }
-}
+
+    private void viewAllOrders() {
+        System.out.println("\n=== All Work Orders ===");
+        try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
+            String line;
+            boolean hasOrders = false;
+    
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+                hasOrders = true;
+            }
+    
+            if (!hasOrders) {
+                System.out.println("No work orders found.");
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading work orders: " + e.getMessage());
+        }
+    }
+
+    // Mark work order as completed
+    private void markWorkOrderAsCompleted(String registrationId) {
+        boolean found = false;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
+            List<String> lines = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                lines.add(line);
+                if (line.contains("Registration ID: " + registrationId)) {
+                    found = true;
+                    int index = lines.size() - 1;
+                    lines.set(index, lines.get(index).replace("Status: Pending", "Status: Completed"));
+                }
+            }
+
+            if (found) {
+                try (BufferedWriter writer = new BufferedWriter(new FileWriter("work_orders.txt"))) {
+                    for (String updatedLine : lines) {
+                        writer.write(updatedLine);
+                        writer.newLine();
+                    }
+                    System.out.println("Work order marked as completed.");
+                } catch (IOException e) {
+                    System.err.println("Error updating work orders: " + e.getMessage());
+                }
+            } else {
+                System.out.println("Registration ID not found.");
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading work orders: " + e.getMessage());
+        }
+    }
+// private void markWorkOrderAsCompleted(String registrationId) {
+//     List<String> updatedOrders = new ArrayList<>();
+//     boolean found = false;
+
+//     try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
+//         String line;
+//         while ((line = reader.readLine()) != null) {
+//             if (line.contains("Registration ID: " + registrationId)) {
+//                 found = true;
+//                 updatedOrders.add(line + " | Status: Completed");
+//             } else {
+//                 updatedOrders.add(line);
+//             }
+//         }
+//     } catch (IOException e) {
+//         System.err.println("Error reading work orders: " + e.getMessage());
+//     }
+
+//     if (found) {
+//         try (BufferedWriter writer = new BufferedWriter(new FileWriter("work_orders.txt"))) {
+//             for (String updatedOrder : updatedOrders) {
+//                 writer.write(updatedOrder);
+//                 writer.newLine();
+//             }
+//             System.out.println("Work order marked as completed.");
+//         } catch (IOException e) {
+//             System.err.println("Error updating work orders: " + e.getMessage());
+//         }
+//     } else {
+//         System.out.println("Registration ID not found.");
+//     }
+// }
 
 
     private void handleAddProduct(Scanner scanner) {

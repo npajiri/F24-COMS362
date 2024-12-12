@@ -507,7 +507,8 @@ public class CustomerMenu {
             System.out.println("6. View Cart");
             System.out.println("7. Checkout");
             System.out.println("8. View Order History");
-            System.out.println("9. Exit");
+            System.out.println("9. Events");
+            System.out.println("0. Exit");
             System.out.print("Enter your choice: ");
 
             int choice = scanner.nextInt();
@@ -547,6 +548,10 @@ public class CustomerMenu {
                     break;
                 
                 case 9:
+                    handleEventsMenu(scanner, customerId);
+                    break;
+
+                case 0:
                     running = false;
                     System.out.println("Returning to main menu...");
                     break;
@@ -556,6 +561,91 @@ public class CustomerMenu {
             }
         }
     }
+
+    private void handleEventsMenu(Scanner scanner, String customerId) {
+        boolean eventsRunning = true;
+    
+        while (eventsRunning) {
+            System.out.println("\n=== Events Menu ===");
+            System.out.println("1. View Pending Event Orders");
+            System.out.println("2. View Shipped Event Orders");
+            System.out.println("3. View Notifications");
+            System.out.println("4. Back to Customer Menu");
+            System.out.print("Enter your choice: ");
+    
+            int eventsChoice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+    
+            switch (eventsChoice) {
+                case 1:
+                    viewEventOrders(customerId, "Pending");
+                    break;
+    
+                case 2:
+                    viewEventOrders(customerId, "Shipped");
+                    break;
+    
+                case 3:
+                    viewCustomerNotifications(customerId);
+                    break;
+    
+                case 4:
+                    eventsRunning = false;
+                    break;
+    
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+
+    private void viewEventOrders(String customerId, String status) {
+        System.out.println("\n=== " + status + " Event Orders ===");
+        boolean hasOrders = false;
+    
+        try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+                if (parts[0].equals(customerId) && parts[4].equalsIgnoreCase(status)) {
+                    hasOrders = true;
+                    System.out.println("Event Order ID: " + parts[2]);
+                    System.out.println("Event Name: " + parts[1]);
+                    System.out.println("Outfit Description: " + parts[3]);
+                    System.out.println("-----------------------------------");
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading event orders: " + e.getMessage());
+        }
+    
+        if (!hasOrders) {
+            System.out.println("No " + status.toLowerCase() + " event orders found.");
+        }
+    }
+
+    private void viewCustomerNotifications(String customerId) {
+        System.out.println("\n=== Notifications ===");
+        boolean hasNotifications = false;
+    
+        try (BufferedReader reader = new BufferedReader(new FileReader("customer_notifications.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+                if (parts[0].equals("Customer ID: " + customerId)) {
+                    hasNotifications = true;
+                    System.out.println(line);
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading notifications: " + e.getMessage());
+        }
+    
+        if (!hasNotifications) {
+            System.out.println("No notifications found.");
+        }
+    }
+    
 
     private String handleCustomerSelection(Scanner scanner){//, CustomerManagement customerManagement) {
         System.out.println("Are you a:");

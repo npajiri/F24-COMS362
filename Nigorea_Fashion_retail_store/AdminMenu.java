@@ -855,9 +855,11 @@ private void createWorkOrder(String registrationId, String outfitDescription) {
 
 private void handleShipping(Scanner scanner) {
     System.out.println("\n=== Pending Fashion Show Orders ===");
+    List<String> updatedOrders = new ArrayList<>();
+    boolean hasPending = false;
+
     try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
         String line;
-        boolean hasPending = false;
         while ((line = reader.readLine()) != null) {
             String[] parts = line.split("\\|");
             if (parts[1].equalsIgnoreCase("Fashion Show") && parts[4].equalsIgnoreCase("Pending")) {
@@ -867,6 +869,7 @@ private void handleShipping(Scanner scanner) {
                 System.out.println("Outfit Description: " + parts[3]);
                 System.out.println("-----------------------------------");
             }
+            updatedOrders.add(line);
         }
         if (!hasPending) {
             System.out.println("No pending fashion show orders found.");
@@ -874,48 +877,132 @@ private void handleShipping(Scanner scanner) {
         }
     } catch (IOException e) {
         System.err.println("Error reading event orders: " + e.getMessage());
+        return;
     }
 
     System.out.print("Enter Event Order ID to mark as shipped: ");
     String eventOrderId = scanner.nextLine();
 
-    markEventOrderAsShipped(eventOrderId);
+    // Mark the event order as shipped and notify the customer
+    markEventOrderAsShipped(eventOrderId, updatedOrders);
 }
 
-
-private void markEventOrderAsShipped(String eventOrderId) {
-    List<String> updatedOrders = new ArrayList<>();
+// Mark the event order as shipped and notify the customer
+private void markEventOrderAsShipped(String eventOrderId, List<String> updatedOrders) {
     boolean found = false;
+    String customerId = null;
 
-    try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String[] parts = line.split("\\|");
-            if (parts[2].equals(eventOrderId)) { // Match event order ID
-                found = true;
-                updatedOrders.add(parts[0] + "|" + parts[1] + "|" + parts[2] + "|" + parts[3] + "|Shipped");
-            } else {
-                updatedOrders.add(line);
-            }
+    for (int i = 0; i < updatedOrders.size(); i++) {
+        String line = updatedOrders.get(i);
+        String[] parts = line.split("\\|");
+        if (parts[2].equalsIgnoreCase(eventOrderId) && parts[4].equalsIgnoreCase("Pending")) {
+            found = true;
+            customerId = parts[0];
+            updatedOrders.set(i, parts[0] + "|" + parts[1] + "|" + parts[2] + "|" + parts[3] + "|Shipped");
         }
-    } catch (IOException e) {
-        System.err.println("Error reading event orders file: " + e.getMessage());
     }
 
     if (found) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("event_orders.txt"))) {
-            for (String updatedOrder : updatedOrders) {
-                writer.write(updatedOrder);
+            for (String updatedLine : updatedOrders) {
+                writer.write(updatedLine);
                 writer.newLine();
             }
             System.out.println("Event order marked as shipped.");
         } catch (IOException e) {
-            System.err.println("Error updating event orders file: " + e.getMessage());
+            System.err.println("Error updating event orders: " + e.getMessage());
+            return;
         }
+
+        // Notify the customer
+        notifyCustomer(customerId, eventOrderId);
     } else {
-        System.out.println("Event order ID not found.");
+        System.out.println("Event Order ID not found or already shipped.");
     }
 }
+
+// Notify the customer
+private void notifyCustomer(String customerId, String eventOrderId) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("customer_notifications.txt", true))) {
+        writer.write("Customer ID: " + customerId + " | Event Order ID: " + eventOrderId + " | Status: Shipped" + " | Your event order has been shipped!");
+        writer.newLine();
+        System.out.println("Notification sent to customer with ID: " + customerId);
+    } catch (IOException e) {
+        System.err.println("Error sending customer notification: " + e.getMessage());
+    }
+}
+
+
+// private void handleShipping(Scanner scanner) {
+//     System.out.println("\n=== Pending Fashion Show Orders ===");
+//     try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
+//         String line;
+//         boolean hasPending = false;
+//         while ((line = reader.readLine()) != null) {
+//             String[] parts = line.split("\\|");
+//             if (parts[1].equalsIgnoreCase("Fashion Show") && parts[4].equalsIgnoreCase("Pending")) {
+//                 hasPending = true;
+//                 System.out.println("Event Order ID: " + parts[2]);
+//                 System.out.println("Customer ID: " + parts[0]);
+//                 System.out.println("Outfit Description: " + parts[3]);
+//                 System.out.println("-----------------------------------");
+//             }
+//         }
+//         if (!hasPending) {
+//             System.out.println("No pending fashion show orders found.");
+//             return;
+//         }
+//     } catch (IOException e) {
+//         System.err.println("Error reading event orders: " + e.getMessage());
+//     }
+
+//     System.out.print("Enter Event Order ID to mark as shipped: ");
+//     String eventOrderId = scanner.nextLine();
+
+//     markEventOrderAsShipped(eventOrderId);
+// }
+
+
+// private void markEventOrderAsShipped(String eventOrderId) {
+//     List<String> updatedOrders = new ArrayList<>();
+//     boolean found = false;
+
+//     try (BufferedReader reader = new BufferedReader(new FileReader("event_orders.txt"))) {
+//         String line;
+//         while ((line = reader.readLine()) != null) {
+//             String[] parts = line.split("\\|");
+//             if (parts[2].equals(eventOrderId)) { // Match event order ID
+//                 found = true;
+//                 updatedOrders.add(parts[0] + "|" + parts[1] + "|" + parts[2] + "|" + parts[3] + "|Shipped");
+//             } else {
+//                 updatedOrders.add(line);
+//             }
+//         }
+//     } catch (IOException e) {
+//         System.err.println("Error reading event orders file: " + e.getMessage());
+//     }
+
+//     if (found) {
+//         try (BufferedWriter writer = new BufferedWriter(new FileWriter("event_orders.txt"))) {
+//             for (String updatedOrder : updatedOrders) {
+//                 writer.write(updatedOrder);
+//                 writer.newLine();
+//             }
+//             System.out.println("Event order marked as shipped.");
+//         } catch (IOException e) {
+//             System.err.println("Error updating event orders file: " + e.getMessage());
+//         }
+//         notifyCustomer(customerId, eventOrderId);
+//     } else {
+//         System.out.println("Event Order ID not found or already shipped.");
+//     }
+//     // else {
+//     //     System.out.println("Event order ID not found.");
+//     // }
+
+//     // Notify the customer
+    
+// }
 
 
 
