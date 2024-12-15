@@ -1,5 +1,7 @@
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 // Customer class
 class Customer {
@@ -72,15 +74,95 @@ class Product {
 
 // Inventory class
 class Inventory {
-    private int stockLevel;
+    private String name; // Name of the inventory (e.g., "Main", "Warehouse-A")
+    private Map<String, Integer> stockLevels; // Maps Product ID to its stock level
 
-    public Inventory(int stockLevel) {
-        this.stockLevel = stockLevel;
+    // Constructor
+    public Inventory(String name) {
+        this.name = name;
+        this.stockLevels = new HashMap<>();
     }
 
-    public int getStockLevel() { return stockLevel; }
-    public void setStockLevel(int stockLevel) { this.stockLevel = stockLevel; }
+    // Getter and Setter for inventory name
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    // Add product to inventory with initial stock level
+    public void addProduct(String productId, int stockLevel) {
+        stockLevels.put(productId, stockLevels.getOrDefault(productId, 0) + stockLevel);
+    }
+
+    // Remove product from inventory
+    public void removeProduct(String productId) {
+        stockLevels.remove(productId);
+    }
+
+    // Check if a product has sufficient stock
+    public boolean hasStock(String productId, int requiredQuantity) {
+        return stockLevels.getOrDefault(productId, 0) >= requiredQuantity;
+    }
+
+    // Reduce stock for a product
+    public boolean reduceStock(String productId, int quantity) {
+        if (!hasStock(productId, quantity)) {
+            return false; // Not enough stock
+        }
+        stockLevels.put(productId, stockLevels.get(productId) - quantity);
+        return true;
+    }
+
+    // Increase stock for a product
+    public void increaseStock(String productId, int quantity) {
+        stockLevels.put(productId, stockLevels.getOrDefault(productId, 0) + quantity);
+    }
+
+    // Get stock level for a product
+    public int getStockLevel(String productId) {
+        return stockLevels.getOrDefault(productId, 0);
+    }
+
+    // List all products in the inventory
+    public Map<String, Integer> listAllProducts() {
+        return stockLevels;
+    }
+
+    // public int getStockForProduct(String productId) {
+    //     return products.getOrDefault(productId, 0);
+    // }
+    
+
+    // public boolean hasProduct(String productId) {
+    //     return products.containsKey(productId);
+    // }
+    
+    // public void setStockLevel(String productId, int stockLevel) {
+    //     products.put(productId, stockLevel);
+    // }
+
+    // Display inventory contents
+    public void displayInventory() {
+        System.out.println("=== Inventory: " + name + " ===");
+        for (Map.Entry<String, Integer> entry : stockLevels.entrySet()) {
+            System.out.println("Product ID: " + entry.getKey() + " | Stock Level: " + entry.getValue());
+        }
+        System.out.println("-------------------------");
+    }
 }
+// class Inventory {
+//     private int stockLevel;
+
+//     public Inventory(int stockLevel) {
+//         this.stockLevel = stockLevel;
+//     }
+
+//     public int getStockLevel() { return stockLevel; }
+//     public void setStockLevel(int stockLevel) { this.stockLevel = stockLevel; }
+// }
 
 // Supplier class
 class Supplier {

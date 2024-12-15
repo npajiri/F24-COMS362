@@ -160,7 +160,8 @@ public class AdminMenu {
         System.out.println("1. View Low Stock Products");
         System.out.println("2. Create Supplier Order");
         System.out.println("3. Update Delivery Status");
-        System.out.println("4. Exit to Admin Menu");
+        System.out.println("4. Manage Inventory Inquiries");
+        System.out.println("0. Exit to Admin Menu");
         System.out.print("Enter your choice: ");
 
         if (!scanner.hasNextInt()) {
@@ -186,6 +187,10 @@ public class AdminMenu {
                 break;
 
             case 4:
+                handleManageInventoryInquiries(scanner);
+                break;
+
+            case 0:
                 System.out.println("Returning to Admin Menu...");
                 managing = false;
                 break;
@@ -1003,6 +1008,191 @@ private void notifyCustomer(String customerId, String eventOrderId) {
 //     // Notify the customer
     
 // }
+
+
+private void handleManageInventoryInquiries(Scanner scanner) {
+    System.out.println("\n=== Inventory Inquiries ===");
+    try (BufferedReader reader = new BufferedReader(new FileReader("inventory_inquiries.txt"))) {
+        String line;
+        boolean hasInquiries = false;
+        List<String> unresolvedInquiries = new ArrayList<>();
+        while ((line = reader.readLine()) != null) {
+            //hasInquiries = true;
+            String[] parts = line.split("\\|");
+            String status = parts[5];
+            System.out.println("Inquiry ID: " + parts[0]);
+            System.out.println("Customer ID: " + parts[1]);
+            System.out.println("Product ID: " + parts[2]);
+            System.out.println("Product Name: " + parts[3]);
+            System.out.println("Quantity: " + parts[4]);
+            System.out.println("Status: " + status);
+            System.out.println("-----------------------------------");
+
+            // Collect unresolved inquiries for possible resolution
+            if (status.equalsIgnoreCase("Unresolved")) {
+                unresolvedInquiries.add(line);
+                hasInquiries = true;
+            }
+        }
+
+        if (unresolvedInquiries.isEmpty()) {
+            System.out.println("No unresolved inquiries to manage.");
+            return;
+        }
+
+        System.out.print("Enter Inquiry ID to resolve: ");
+        String inquiryId = scanner.nextLine();
+
+        // Resolve inquiry
+        // Resolve inquiry if unresolved
+        for (String unresolvedInquiry : unresolvedInquiries) {
+            String[] parts = unresolvedInquiry.split("\\|");
+            if (parts[0].equals(inquiryId)) {
+                resolveInquiry(inquiryId, parts[1], parts[2], Integer.parseInt(parts[4]));
+                return;
+            }
+        }
+
+        System.out.println("Inquiry ID not found or already resolved.");
+    } catch (IOException e) {
+        System.err.println("Error reading inventory inquiries: " + e.getMessage());
+    }
+
+    //     for (String inquiry : getAllInquiries()) {
+    //         String[] parts = inquiry.split("\\|");
+    //         if (parts[0].equals(inquiryId)) {
+    //             resolveInquiry(inquiryId, parts[1], parts[2], Integer.parseInt(parts[4]));
+    //             return;
+    //         }
+    //     }
+    //     System.out.println("Inquiry ID not found.");
+    // } catch (IOException e) {
+    //     System.err.println("Error reading inventory inquiries: " + e.getMessage());
+    // }
+}
+
+// Helper to get all inquiries
+private List<String> getAllInquiries() {
+    List<String> inquiries = new ArrayList<>();
+    try (BufferedReader reader = new BufferedReader(new FileReader("inventory_inquiries.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            inquiries.add(line);
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading inventory inquiries: " + e.getMessage());
+    }
+    return inquiries;
+}
+
+// Resolve inquiry by transferring stock from a secondary inventory
+private void resolveInquiry(String inquiryId, String customerId, String productId, int quantity) {
+    try {
+        // Get all inventories
+        Map<String, Inventory> inventories = productManagement.getAllInventories();
+
+        // Find inventory with sufficient stock
+        String sourceInventory = null;
+        for (Map.Entry<String, Inventory> entry : inventories.entrySet()) {
+            String inventoryName = entry.getKey();
+            Inventory inventory = entry.getValue();
+            if (inventory.hasStock(productId, quantity)) {
+                sourceInventory = inventoryName;
+                break;
+            }
+        }
+
+        if (sourceInventory != null) {
+            // Transfer stock to Main inventory
+            if (productManagement.transferStock(sourceInventory, "Main", productId, quantity)) {
+                System.out.println("Stock transferred successfully from " + sourceInventory + " to Main inventory.");
+                // Notify customer and remove the inquiry
+                notifyCustomerOfResolvedInquiry(customerId, productId, quantity);
+                updateInquiryStatus(inquiryId, "Resolved");
+                //removeInquiry(inquiryId);
+            } else {
+                System.out.println("Error during stock transfer.");
+            }
+        } else {
+            System.out.println("No inventory has sufficient stock to fulfill this inquiry.");
+        }
+    } catch (Exception e) {
+        System.err.println("Error resolving inquiry: " + e.getMessage());
+    }
+}
+
+// Notify customer of resolved inquiry
+private void notifyCustomerOfResolvedInquiry(String customerId, String productId, int quantity) {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("customer_notifications.txt", true))) {
+        String message = String.format(
+            "has been resolved. You can add it to your cart now.",
+            customerId, productId, quantity
+        );
+        writer.write("Customer ID: " + customerId + " | Product ID: " + productId + 
+                     " | Quantity: " + quantity + " | " + message);
+        writer.newLine();
+        System.out.println("Customer has been notified of the resolved inquiry.");
+    } catch (IOException e) {
+        System.err.println("Error notifying customer: " + e.getMessage());
+    }
+}
+
+// Update inquiry status
+private void updateInquiryStatus(String inquiryId, String newStatus) {
+    List<String> updatedInquiries = new ArrayList<>();
+
+    try (BufferedReader reader = new BufferedReader(new FileReader("inventory_inquiries.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("\\|");
+            if (parts[0].equals(inquiryId)) {
+                // Update the status of the matching inquiry
+                parts[5] = newStatus;
+                updatedInquiries.add(String.join("|", parts));
+            } else {
+                updatedInquiries.add(line);
+            }
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading inventory inquiries file: " + e.getMessage());
+    }
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("inventory_inquiries.txt"))) {
+        for (String updatedLine : updatedInquiries) {
+            writer.write(updatedLine);
+            writer.newLine();
+        }
+    } catch (IOException e) {
+        System.err.println("Error updating inventory inquiries file: " + e.getMessage());
+    }
+}
+
+
+// Remove resolved inquiry from inquiries file
+private void removeInquiry(String inquiryId) {
+    List<String> updatedInquiries = new ArrayList<>();
+    try (BufferedReader reader = new BufferedReader(new FileReader("inventory_inquiries.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (!line.startsWith(inquiryId + "|")) {
+                updatedInquiries.add(line);
+            }
+        }
+    } catch (IOException e) {
+        System.err.println("Error reading inquiries: " + e.getMessage());
+        return;
+    }
+
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("inventory_inquiries.txt"))) {
+        for (String updatedInquiry : updatedInquiries) {
+            writer.write(updatedInquiry);
+            writer.newLine();
+        }
+        System.out.println("Inquiry resolved and removed from file.");
+    } catch (IOException e) {
+        System.err.println("Error updating inquiries file: " + e.getMessage());
+    }
+}
 
 
 

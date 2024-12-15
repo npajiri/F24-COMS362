@@ -7,17 +7,31 @@ import java.util.Map;
 public class ProductManagement {
     private final Map<String, Product> products;
     private static final String PRODUCTS_FILE = "products.txt";
+    private Map<String, Inventory> inventories; // Map of Inventory Name to Inventory Object
+
 
     public ProductManagement() {
         this.products = new HashMap<>();
+        this.inventories = new HashMap<>();
+        loadInventoriesFromFile();
         loadProductsFromFile();
     }
 
     // Add a product and save it to the file
-    public void addProduct(String id, String name, String description, double price, int stock) {
+    public void addProduct(String id, String name, String description, double price, int stock, String inventoryName) {
         Product product = new Product(name, description, price, 0.0, id, stock);
         products.put(id, product);
         saveProductsToFile();
+
+        // Add the product to the specified inventory
+    Inventory inventory = inventories.get(inventoryName);
+    if (inventory != null) {
+        inventory.addProduct(id, stock); // Add product to the inventory
+        saveInventoriesToFile(); // Save the inventories file
+        System.out.println("Product successfully added to " + inventoryName + " inventory.");
+    } else {
+        System.out.println("Error: Inventory " + inventoryName + " does not exist.");
+    }
     }
 
     // View all products with average review ratings
@@ -326,6 +340,129 @@ public boolean updateStock(String productId, int quantityChange) {
     }
     System.out.println("Error: Product ID " + productId + " not found.");
     return false;
+}
+
+public void updateMainInventory(String productId, int quantityChange) {
+    // Load or ensure inventories are in memory
+    // Typically done once at startup, but ensure that 'inventories' is not null.
+    
+    // Fetch the "Main" inventory object
+    loadInventoriesFromFile();
+    //Inventory mainInventory = inventories.get("Main");
+    Inventory mainInventory = getInventoryByName("Main");
+    System.out.println("main: " + mainInventory);
+    if (mainInventory != null) {
+        // Get current stock, update it
+        int currentStock = mainInventory.listAllProducts().getOrDefault(productId, 0);
+        System.out.println("current stock = " + currentStock);
+        //int newStock = currentStock + quantityChange;
+        // Update stock in memory
+        mainInventory.addProduct(productId, quantityChange);
+        
+        // Save the updated inventories map to file
+        saveInventoriesToFile();
+    } else {
+        System.err.println("Main inventory not found. Cannot update inventories.");
+    }
+}
+
+// Load inventories from a file
+private void loadInventoriesFromFile() {
+    try (BufferedReader reader = new BufferedReader(new FileReader("inventories.txt"))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] parts = line.split("\\|");
+            String inventoryName = parts[0];
+            Inventory inventory = new Inventory(inventoryName);
+
+            for (int i = 1; i < parts.length; i++) {
+                String[] productDetails = parts[i].split(":");
+                String productId = productDetails[0];
+                int stockLevel = Integer.parseInt(productDetails[1]);
+                inventory.addProduct(productId, stockLevel);
+            }
+            inventories.put(inventoryName, inventory);
+        }
+    } catch (IOException e) {
+        System.err.println("Error loading inventories: " + e.getMessage());
+    }
+}
+
+// Save inventories to a file
+public void saveInventoriesToFile() {
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter("inventories.txt"))) {
+        for (Map.Entry<String, Inventory> entry : inventories.entrySet()) {
+            StringBuilder inventoryLine = new StringBuilder(entry.getKey());
+            Inventory inventory = entry.getValue();
+
+            for (Map.Entry<String, Integer> product : inventory.listAllProducts().entrySet()) {
+                inventoryLine.append("|").append(product.getKey()).append(":").append(product.getValue());
+            }
+            writer.write(inventoryLine.toString());
+            writer.newLine();
+        }
+    } catch (IOException e) {
+        System.err.println("Error saving inventories: " + e.getMessage());
+    }
+}
+
+// Add stock to an inventory
+public boolean addStock(String inventoryName, String productId, int quantity) {
+    Inventory inventory = inventories.get(inventoryName);
+    if (inventory == null) {
+        System.out.println("Inventory " + inventoryName + " not found.");
+        return false;
+    }
+    inventory.increaseStock(productId, quantity);
+    saveInventoriesToFile();
+    return true;
+}
+
+// Transfer stock between inventories
+public boolean transferStock(String sourceInventoryName, String targetInventoryName, String productId, int quantity) {
+    Inventory sourceInventory = inventories.get(sourceInventoryName);
+    Inventory targetInventory = inventories.get(targetInventoryName);
+
+    if (sourceInventory == null || targetInventory == null) {
+        System.out.println("Source or target inventory not found.");
+        return false;
+    }
+
+    if (sourceInventory.reduceStock(productId, quantity)) {
+        targetInventory.increaseStock(productId, quantity);
+        saveInventoriesToFile();
+        return true;
+    } else {
+        System.out.println("Insufficient stock in " + sourceInventoryName);
+        return false;
+    }
+}
+
+// View all inventories
+public void viewAllInventories() {
+    for (Inventory inventory : inventories.values()) {
+        inventory.displayInventory();
+    }
+}
+
+// View specific inventory
+public void viewSpecificInventory(String inventoryName) {
+    Inventory inventory = inventories.get(inventoryName);
+    if (inventory == null) {
+        System.out.println("Inventory " + inventoryName + " not found.");
+        return;
+    }
+    inventory.displayInventory();
+}
+
+// Get inventory by name
+public Inventory getInventoryByName(String inventoryName) {
+    return inventories.get(inventoryName);
+}
+
+// Get all inventories
+public Map<String, Inventory> getAllInventories() {
+    return inventories;
 }
 
     

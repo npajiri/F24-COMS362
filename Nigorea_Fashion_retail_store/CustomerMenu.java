@@ -469,6 +469,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -508,6 +509,9 @@ public class CustomerMenu {
             System.out.println("7. Checkout");
             System.out.println("8. View Order History");
             System.out.println("9. Events");
+            System.out.println("10. Browse Inventories");
+            System.out.println("11. View Inventory Inquiries");
+            System.out.println("12. View Notifications");
             System.out.println("0. Exit");
             System.out.print("Enter your choice: ");
 
@@ -551,6 +555,18 @@ public class CustomerMenu {
                     handleEventsMenu(scanner, customerId);
                     break;
 
+                case 10:
+                    handleBrowseInventories(scanner);
+                    break;
+
+                case 11:
+                    handleViewInventoryInquiries(scanner, customerId);
+                    break;
+
+                case 12:
+                    viewCustomerNotifications(customerId);
+                    break;
+
                 case 0:
                     running = false;
                     System.out.println("Returning to main menu...");
@@ -561,6 +577,114 @@ public class CustomerMenu {
             }
         }
     }
+
+    private void handleViewInventoryInquiries(Scanner scanner, String customerId) {
+        boolean running = true;
+    
+        while (running) {
+            System.out.println("\n=== Inventory Inquiries ===");
+            System.out.println("1. View Resolved Inquiries");
+            System.out.println("2. View Unresolved Inquiries");
+            System.out.println("3. View All Inquiries");
+            System.out.println("0. Return to Main Menu");
+            System.out.print("Enter your choice: ");
+    
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+    
+            if (choice == 0) {
+                System.out.println("Returning to main menu...");
+                running = false;
+                break;
+            }
+    
+            try (BufferedReader reader = new BufferedReader(new FileReader("inventory_inquiries.txt"))) {
+                String line;
+                boolean found = false;
+    
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("\\|");
+                    String inquiryStatus = parts[5];
+                    boolean match = false;
+    
+                    // Filter inquiries based on the user's choice
+                    switch (choice) {
+                        case 1: // Resolved
+                            match = inquiryStatus.equalsIgnoreCase("Resolved") && parts[1].equals(customerId);
+                            break;
+    
+                        case 2: // Unresolved
+                            match = inquiryStatus.equalsIgnoreCase("Unresolved") && parts[1].equals(customerId);
+                            break;
+    
+                        case 3: // All
+                            match = parts[1].equals(customerId);
+                            break;
+    
+                        default:
+                            System.out.println("Invalid choice. Please try again.");
+                            continue;
+                    }
+    
+                    if (match) {
+                        found = true;
+                        System.out.println("Inquiry ID: " + parts[0]);
+                        System.out.println("Product ID: " + parts[2]);
+                        System.out.println("Product Name: " + parts[3]);
+                        System.out.println("Quantity: " + parts[4]);
+                        System.out.println("Status: " + parts[5]);
+                        System.out.println("-----------------------------------");
+                    }
+                }
+    
+                if (!found) {
+                    System.out.println("No inquiries found for the selected option.");
+                }
+            } catch (IOException e) {
+                System.err.println("Error reading inventory inquiries: " + e.getMessage());
+            }
+        }
+    }
+    
+    private void handleBrowseInventories(Scanner scanner) {
+        boolean running = true;
+    
+        while (running) {
+            System.out.println("\n=== Browse Inventories ===");
+            System.out.println("1. View All Inventories");
+            System.out.println("2. View Specific Inventory");
+            System.out.println("0. Return to Main Menu");
+            System.out.print("Enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+    
+            switch (choice) {
+                case 1:
+                    // View all inventories
+                    productManagement.viewAllInventories();
+                    break;
+    
+                case 2:
+                    // View specific inventory
+                    System.out.print("Enter Inventory Name (e.g., Warehouse-A, Warehouse-B, Main): ");
+                    String inventoryName = scanner.nextLine();
+                    productManagement.viewSpecificInventory(inventoryName);
+                    break;
+    
+                case 0:
+                    // Return to main menu
+                    System.out.println("Returning to main menu...");
+                    running = false;
+                    break;
+    
+                default:
+                    // Invalid choice
+                    System.out.println("Invalid choice. Please try again.");
+                    break;
+            }
+        }
+    }
+    
 
     private void handleEventsMenu(Scanner scanner, String customerId) {
         boolean eventsRunning = true;
@@ -830,14 +954,64 @@ public class CustomerMenu {
         int quantity = scanner.nextInt();
         scanner.nextLine(); // Consume newline
 
-        // Check if quantity is within available stock
-        if (quantity > product.getStock()) {
-            System.out.println("Error: Requested quantity exceeds available stock. Available stock: " + product.getStock());
+        // Check stock in Main inventory
+        Inventory mainInventory = productManagement.getInventoryByName("Main");
+        if (mainInventory == null) {
+            System.out.println("Main inventory not found. Cannot proceed with the order.");
             return;
         }
 
-        cart.addItem(customerId, productId, quantity, product.getPrice());
-        System.out.println("Added " + quantity + " of " + product.getName() + " to cart.");
+        int mainCurStock = mainInventory.listAllProducts().getOrDefault(productId, 0);
+        // Check how many of this product the customer already has in their cart
+        int currentInCart = cart.getQuantity(customerId, productId); 
+        System.out.println("current in cart: " + currentInCart);
+
+        int totalRequested = currentInCart + quantity;
+
+        // If total requested is <= main stock, we can fulfill from the main inventory
+        if (totalRequested <= mainCurStock && mainInventory.hasStock(productId, quantity)) {
+            cart.addItem(customerId, productId, quantity, product.getPrice());
+            mainInventory.reduceStock(productId, quantity);
+            System.out.println("Added " + quantity + " of " + product.getName() + " to your cart.");
+        } else {
+            // If total requested exceeds main stock or mainInventory doesn't have enough
+            // for this request,
+            // create an inventory inquiry instead.
+            System.out.println("Not enough stock in Main inventory to fulfill this total request.");
+            System.out.println("Creating an inventory inquiry for the requested quantity...");
+            createInventoryInquiry(customerId, productId, product.getName(), quantity);
+        }
+
+        // if (mainInventory != null && mainInventory.hasStock(productId, quantity)) {
+        //     cart.addItem(customerId, productId, quantity, product.getPrice());
+        //     mainInventory.reduceStock(productId, quantity);
+        //     System.out.println("Added " + quantity + " of " + product.getName() + " to your cart.");
+        // } else {
+        //     System.out.println("Not enough stock in Main inventory. Creating an inventory inquiry...");
+        //     createInventoryInquiry(customerId, productId, product.getName(), quantity);
+        // }
+
+        // Check if quantity is within available stock
+        // if (quantity > product.getStock()) {
+        //     System.out.println("Error: Requested quantity exceeds available stock. Available stock: " + product.getStock());
+        //     return;
+        // }
+
+        // cart.addItem(customerId, productId, quantity, product.getPrice());
+        // System.out.println("Added " + quantity + " of " + product.getName() + " to cart.");
+    }
+
+    // Create an inventory inquiry
+    private void createInventoryInquiry(String customerId, String productId, String productName, int quantity) {
+        String inquiryId = "INQ" + System.currentTimeMillis();
+        String status = "Unresolved";
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("inventory_inquiries.txt", true))) {
+            writer.write(inquiryId + "|" + customerId + "|" + productId + "|" + productName + "|" + quantity + "|" + status);
+            writer.newLine();
+            System.out.println("Inventory inquiry created with ID: " + inquiryId);
+        } catch (IOException e) {
+            System.err.println("Error creating inventory inquiry: " + e.getMessage());
+        }
     }
 
     private void handleViewCart(String customerId) {
@@ -851,61 +1025,122 @@ public class CustomerMenu {
         System.out.println("Total Cost: $" + cart.getTotalCost(customerId));
     }
 
-    private void handleCheckout(Scanner scanner, String customerId) {
-        System.out.println("\n=== Checkout ===");
+    // private void handleCheckout(Scanner scanner, String customerId) {
+    //     System.out.println("\n=== Checkout ===");
     
-        // Print receipt header
-        System.out.println("\n=== Receipt ===");
-        System.out.printf("%-10s %-20s %-10s %-10s%n", "Product ID", "Product Name", "Quantity", "Price");
+    //     // Print receipt header
+    //     System.out.println("\n=== Receipt ===");
+    //     System.out.printf("%-10s %-20s %-10s %-10s%n", "Product ID", "Product Name", "Quantity", "Price");
     
-        // Process cart items
-        cart.getItems(customerId).forEach((productId, quantity) -> {
-            Product product = productManagement.getProductById(productId);
-            if (product != null) {
-                // Update stock levels
-                productManagement.updateStock(productId, -quantity);
+    //     // Process cart items
+    //     cart.getItems(customerId).forEach((productId, quantity) -> {
+    //         Product product = productManagement.getProductById(productId);
+    //         if (product != null) {
+    //             // Update stock levels
+    //             productManagement.updateStock(productId, -quantity);
     
-                // Print product details for receipt
-                System.out.printf("%-10s %-20s %-10d $%-10.2f%n", productId, product.getName(), quantity, product.getPrice() * quantity);
-            }
-        });
+    //             // Print product details for receipt
+    //             System.out.printf("%-10s %-20s %-10d $%-10.2f%n", productId, product.getName(), quantity, product.getPrice() * quantity);
+    //         }
+    //     });
 
-        StringBuilder productIdsBuilder = new StringBuilder(); // To store product IDs in the order
-        cart.getItems(customerId).forEach((productId, quantity) -> {
-            Product product = productManagement.getProductById(productId);
-            if (product != null) {
-                //productManagement.updateStock(productId, -quantity); // Update stock levels
+    //     StringBuilder productIdsBuilder = new StringBuilder(); // To store product IDs in the order
+    //     cart.getItems(customerId).forEach((productId, quantity) -> {
+    //         Product product = productManagement.getProductById(productId);
+    //         if (product != null) {
+    //             //productManagement.updateStock(productId, -quantity); // Update stock levels
     
-                // Append product ID to the order's product list
-                if (productIdsBuilder.length() > 0) {
-                    productIdsBuilder.append(",");
-                }
-                productIdsBuilder.append(productId);
+    //             // Append product ID to the order's product list
+    //             if (productIdsBuilder.length() > 0) {
+    //                 productIdsBuilder.append(",");
+    //             }
+    //             productIdsBuilder.append(productId);
+    //         }
+    //     });
+    
+    //     // Calculate total cost and generate order ID
+    //     double totalCost = cart.getTotalCost(customerId);
+    //     String orderID = "ORD" + System.currentTimeMillis();
+    //     String productIds = productIdsBuilder.toString(); // Get the product IDs as a comma-separated string
+    
+    //     // Save the order
+    //     Order order = new Order(customerId, new Date(), totalCost, "Pending", orderID);
+    //     saveOrder(order, productIds);
+    
+    //     // Generate a report
+    //     String reportID = "RPT" + System.currentTimeMillis();
+    //     Report report = new Report(reportID, "Customer Order", new Date());
+    //     saveReport(report, totalCost);
+    
+    //     // Print total cost and order ID
+    //     System.out.printf("%n%-10s %-20s $%-10.2f%n", "", "Total:", totalCost);
+    //     System.out.println("Order ID: " + orderID);
+    
+    //     // Clear the cart and finalize checkout
+    //     cart.clearCart(customerId);
+    //     System.out.println("Checkout complete. Thank you for your purchase!");
+    // }
+
+    private void handleCheckout(Scanner scanner, String customerId) {
+    System.out.println("\n=== Checkout ===");
+
+    // Print receipt header
+    System.out.println("\n=== Receipt ===");
+    System.out.printf("%-10s %-20s %-10s %-10s%n", "Product ID", "Product Name", "Quantity", "Price");
+
+    Map<String, Integer> items = cart.getItems(customerId);
+    for (Map.Entry<String, Integer> entry : items.entrySet()) {
+        String productId = entry.getKey();
+        int quantity = entry.getValue();
+        Product product = productManagement.getProductById(productId);
+        if (product != null) {
+            // Update product stock levels
+            boolean stockUpdated = productManagement.updateStock(productId, -quantity);
+            
+            // If product stock updated, also update the main inventory
+            if (stockUpdated) {
+                productManagement.updateMainInventory(productId, -quantity);
             }
-        });
-    
-        // Calculate total cost and generate order ID
-        double totalCost = cart.getTotalCost(customerId);
-        String orderID = "ORD" + System.currentTimeMillis();
-        String productIds = productIdsBuilder.toString(); // Get the product IDs as a comma-separated string
-    
-        // Save the order
-        Order order = new Order(customerId, new Date(), totalCost, "Pending", orderID);
-        saveOrder(order, productIds);
-    
-        // Generate a report
-        String reportID = "RPT" + System.currentTimeMillis();
-        Report report = new Report(reportID, "Customer Order", new Date());
-        saveReport(report, totalCost);
-    
-        // Print total cost and order ID
-        System.out.printf("%n%-10s %-20s $%-10.2f%n", "", "Total:", totalCost);
-        System.out.println("Order ID: " + orderID);
-    
-        // Clear the cart and finalize checkout
-        cart.clearCart(customerId);
-        System.out.println("Checkout complete. Thank you for your purchase!");
+            
+            // Print product details for receipt
+            System.out.printf("%-10s %-20s %-10d $%-10.2f%n", productId, product.getName(), quantity, product.getPrice() * quantity);
+        }
     }
+
+    StringBuilder productIdsBuilder = new StringBuilder(); 
+    for (Map.Entry<String, Integer> entry : items.entrySet()) {
+        String productId = entry.getKey();
+        Product product = productManagement.getProductById(productId);
+        if (product != null) {
+            if (productIdsBuilder.length() > 0) {
+                productIdsBuilder.append(",");
+            }
+            productIdsBuilder.append(productId);
+        }
+    }
+
+    // Calculate total cost and generate order ID
+    double totalCost = cart.getTotalCost(customerId);
+    String orderID = "ORD" + System.currentTimeMillis();
+    String productIds = productIdsBuilder.toString();
+
+    // Save the order
+    Order order = new Order(customerId, new Date(), totalCost, "Pending", orderID);
+    saveOrder(order, productIds);
+
+    // Generate a report
+    String reportID = "RPT" + System.currentTimeMillis();
+    Report report = new Report(reportID, "Customer Order", new Date());
+    saveReport(report, totalCost);
+
+    // Print total cost and order ID
+    System.out.printf("%n%-10s %-20s $%-10.2f%n", "", "Total:", totalCost);
+    System.out.println("Order ID: " + orderID);
+
+    // Clear the cart and finalize checkout
+    cart.clearCart(customerId);
+    System.out.println("Checkout complete. Thank you for your purchase!");
+}
     
 
     private void saveOrder(Order order, String productIds) {

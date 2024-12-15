@@ -113,6 +113,12 @@ public class Cart {
             System.err.println("Error loading carts from file: " + e.getMessage());
         }
     }
+
+    public int getQuantity(String customerId, String productId) {
+        // TODO Auto-generated method stub
+        int currentInCart = getItems(customerId).getOrDefault(productId, 0);
+                return currentInCart;
+    }
 }
 
 

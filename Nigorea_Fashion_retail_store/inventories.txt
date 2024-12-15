@@ -1,0 +1,3 @@
+Warehouse-A|P001:0|P002:0
+Main|P001:4|P003:0|P002:5
+Warehouse-B|P001:0|P003:4|P002:0

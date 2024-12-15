@@ -97,7 +97,10 @@ public class SupplierMenu {
         int stock = scanner.nextInt();
         scanner.nextLine(); // Consume newline
 
-        productManagement.addProduct(productId, productName, description, price, stock);
+        System.out.print("Enter Inventory to supply to (e.g., Main, Warehouse-A, Warehouse-B): ");
+        String inventoryName = scanner.nextLine();
+
+        productManagement.addProduct(productId, productName, description, price, stock, inventoryName);
         System.out.println("Product supplied successfully!");
     }
 
