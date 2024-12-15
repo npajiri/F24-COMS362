@@ -1,0 +1,1 @@
+Customer ID: C002 | Event Order ID: REG1733961745823 | Status: Shipped | Your event order has been shipped! 

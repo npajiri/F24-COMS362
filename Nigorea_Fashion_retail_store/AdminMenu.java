@@ -3,6 +3,8 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -654,54 +656,195 @@ private void displayInventoryReport(List<Map<String, Object>> data) {
 private void manageWorkerContracts(Scanner scanner) {
     WorkerManagementSystem workerSystem = new WorkerManagementSystem();
 
-    System.out.println("\n=== Manage Worker Contracts ===");
-    System.out.print("Enter Worker ID: ");
+    while (true) {
+        System.out.println("\n=== Manage Worker Contracts ===");
+        System.out.println("1. Find Worker");
+        System.out.println("2. Add New Worker");
+        System.out.println("3. Remove Worker");
+        System.out.println("0. Exit to Admin Menu");
+        System.out.print("Enter your choice: ");
+        String choice = scanner.nextLine();
+
+        switch (choice) {
+            case "1":
+                findAndUpdateWorker(scanner, workerSystem);
+                break;
+            case "2":
+                addNewWorker(scanner, workerSystem);
+                break;
+            case "3":
+                removeWorker(scanner, workerSystem);
+                break;
+            case "0":
+                return; // Exit back to Admin Menu
+            default:
+                System.out.println("Invalid choice. Please try again.");
+        }
+    }
+}
+
+private void findAndUpdateWorker(Scanner scanner, WorkerManagementSystem workerSystem) {
+    System.out.print("\nEnter Worker ID: ");
     String workerId = scanner.nextLine();
 
     WorkerManagementSystem.Worker worker = workerSystem.getWorkerById(workerId);
     if (worker != null) {
         System.out.println("Worker Found: " + worker.toString());
+        System.out.println("Do you want to update this worker's details? (yes/no): ");
+        String updateChoice = scanner.nextLine().trim().toLowerCase();
+
+        if (!updateChoice.equals("yes")) {
+            System.out.println("No updates made to the worker.");
+            return; // Exit the method without updating
+        }
+
+        System.out.print("Enter Name (" + worker.getName() + "): ");
+        String name = scanner.nextLine();
+        System.out.print("Enter Position (" + worker.getPosition() + "): ");
+        String position = scanner.nextLine();
+        System.out.print("Enter Contract Type (" + worker.getContractType() + "): ");
+        String contractType = scanner.nextLine();
+        System.out.print("Enter Salary (" + worker.getSalary() + "): ");
+        double salary = Double.parseDouble(scanner.nextLine());
+        System.out.print("Enter Hours Per Week (" + worker.getHoursPerWeek() + "): ");
+        int hoursPerWeek = Integer.parseInt(scanner.nextLine());
+        System.out.print("Enter Start Date (" + worker.getStartDate() + "): ");
+        String startDate = scanner.nextLine();
+        System.out.print("Enter End Date (" + worker.getEndDate() + "): ");
+        String endDate = scanner.nextLine();
+
+        // Update the worker with the new details
+        worker = new WorkerManagementSystem.Worker(workerId,
+                                                   name.isEmpty() ? worker.getName() : name,
+                                                   position.isEmpty() ? worker.getPosition() : position,
+                                                   contractType.isEmpty() ? worker.getContractType() : contractType,
+                                                   salary,
+                                                   hoursPerWeek,
+                                                   startDate.isEmpty() ? worker.getStartDate() : startDate,
+                                                   endDate.isEmpty() ? worker.getEndDate() : endDate);
+        workerSystem.addOrUpdateWorker(worker);
+
+        System.out.println("Worker details updated successfully.");
     } else {
-        System.out.println("Worker not found. Adding new worker.");
+        System.out.println("Worker not found. Please try again.");
+    }
+}
+
+private void addNewWorker(Scanner scanner, WorkerManagementSystem workerSystem) {
+    // Automatically generate the next Worker ID
+    String newWorkerId = generateNextWorkerId(workerSystem);
+
+    if (newWorkerId == null) {
+        System.out.println("Unable to generate a new Worker ID. Please check the workers file.");
+        return;
     }
 
+    System.out.println("\nAssigning Worker ID: " + newWorkerId);
     System.out.print("Enter Name: ");
     String name = scanner.nextLine();
-    System.out.print("Enter Contract Type (Full-time, Part-time, Contract): ");
+    System.out.print("Enter Position: ");
+    String position = scanner.nextLine();
+    System.out.print("Enter Contract Type: ");
     String contractType = scanner.nextLine();
     System.out.print("Enter Salary: ");
-    double salary = scanner.nextDouble();
+    double salary = Double.parseDouble(scanner.nextLine());
     System.out.print("Enter Hours Per Week: ");
-    int hoursPerWeek = scanner.nextInt();
-    scanner.nextLine(); // Consume newline
+    int hoursPerWeek = Integer.parseInt(scanner.nextLine());
     System.out.print("Enter Start Date (YYYY-MM-DD): ");
     String startDate = scanner.nextLine();
     System.out.print("Enter End Date (YYYY-MM-DD): ");
     String endDate = scanner.nextLine();
 
-    worker = new WorkerManagementSystem.Worker(workerId, name, contractType, salary, hoursPerWeek, startDate, endDate);
-    workerSystem.addOrUpdateWorker(worker);
+    WorkerManagementSystem.Worker newWorker = new WorkerManagementSystem.Worker(newWorkerId, name, position, contractType, salary, hoursPerWeek, startDate, endDate);
+    workerSystem.addOrUpdateWorker(newWorker);
 
-    System.out.println("Worker contract updated successfully.");
+    System.out.println("New worker added successfully with ID: " + newWorkerId);
 }
+
+private String generateNextWorkerId(WorkerManagementSystem workerSystem) {
+    List<WorkerManagementSystem.Worker> workers = workerSystem.getAllWorkers();
+
+    // Find the highest numerical Worker ID
+    int maxId = 0;
+    for (WorkerManagementSystem.Worker worker : workers) {
+        try {
+            // Extract the numerical part of the Worker ID (e.g., W001 -> 1)
+            String workerId = worker.getWorkerId();
+            int numericPart = Integer.parseInt(workerId.substring(1));
+            if (numericPart > maxId) {
+                maxId = numericPart;
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid Worker ID format: " + worker.getWorkerId());
+        }
+    }
+
+    // Generate the next Worker ID
+    return "W" + String.format("%03d", maxId + 1);
+}
+private void removeWorker(Scanner scanner, WorkerManagementSystem workerSystem) {
+    System.out.print("\nEnter Worker ID to Remove: ");
+    String workerId = scanner.nextLine();
+
+    boolean removed = workerSystem.removeWorker(workerId);
+    if (removed) {
+        System.out.println("Worker with ID " + workerId + " has been successfully removed.");
+    } else {
+        System.out.println("Worker with ID " + workerId + " not found.");
+    }
+}
+
 
 private void generateWorkerPerformanceReport(Scanner scanner) {
     ReportManager reportManager = new ReportManager(new Database());
 
     System.out.println("\n=== Generate Worker Performance Report ===");
-    System.out.print("Enter Start Date (YYYY-MM-DD): ");
-    String startDate = scanner.nextLine();
-    System.out.print("Enter End Date (YYYY-MM-DD): ");
-    String endDate = scanner.nextLine();
 
-    DetailedReport report = reportManager.generateWorkerPerformanceReport(startDate, endDate);
-    if (report != null) {
+    // Validate the start and end dates
+    String startDate = validateDateInput(scanner, "Enter Start Date (YYYY-MM-DD): ");
+    String endDate = validateDateInput(scanner, "Enter End Date (YYYY-MM-DD): ");
+
+    System.out.println("Do you want to filter by worker role? (yes/no): ");
+    String filterChoice = scanner.nextLine().trim().toLowerCase();
+    String roleFilter = null;
+    if (filterChoice.equals("yes")) {
+        System.out.print("Enter Worker Role (e.g., Seller, Manager): ");
+        roleFilter = scanner.nextLine();
+    }
+
+    System.out.println("Do you want to sort the report? (yes/no): ");
+    String sortChoice = scanner.nextLine().trim().toLowerCase();
+    String sortBy = null;
+    if (sortChoice.equals("yes")) {
+        System.out.print("Sort by (hours/sales): ");
+        sortBy = scanner.nextLine().trim().toLowerCase();
+    }
+
+    DetailedReport report = reportManager.generateWorkerPerformanceReport(startDate, endDate, roleFilter, sortBy);
+
+    if (report != null && !report.getDetails().isEmpty()) {
         System.out.println("Report Generated Successfully:");
-        for (String detail : report.getDetails()) {
-            System.out.println(detail);
-        }
+        System.out.println(report.toString());
     } else {
-        System.out.println("Failed to generate report. Please check the parameters.");
+        System.out.println("No performance data found for the specified date range or criteria.");
+    }
+}
+
+
+private String validateDateInput(Scanner scanner, String prompt) {
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    dateFormat.setLenient(false); // Strict date parsing
+
+    while (true) {
+        System.out.print(prompt);
+        String inputDate = scanner.nextLine();
+
+        try {
+            dateFormat.parse(inputDate); // Validate the date format
+            return inputDate; // Return the valid date
+        } catch (ParseException e) {
+            System.out.println("Invalid date format. Please use YYYY-MM-DD.");
+        }
     }
 }
 

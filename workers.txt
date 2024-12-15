@@ -1,0 +1,12 @@
+W001|Alice Johnson|Seller|Full-time|40000.0|30|2024-01-01|2024-12-31
+W002|Bob Smith|Janitor|Part-time|18000.0|20|2024-01-01|2024-06-30
+W003|Clara Lee|Designer|Contract|60000.0|30|2024-03-01|2024-08-31
+W004|Daniel Kim|Model|Part-time|40000.0|15|2024-02-01|2024-12-31
+W005|Evelyn Carter|Manager|Full-time|75000.0|40|2024-01-01|2024-12-31
+W006|Frank Howard|Seller|Full-time|42000.0|40|2024-01-15|2024-12-31
+W007|Grace Liu|Janitor|Part-time|17000.0|20|2024-01-15|2024-07-31
+W008|Henry Cooper|Designer|Full-time|65000.0|40|2024-01-01|2024-12-31
+W009|Isabel Gomez|Model|Contract|35000.0|10|2024-05-01|2024-10-31
+W010|James Peterson|Manager|Full-time|80000.0|40|2024-01-01|2024-12-31
+W011|Adam Chris|Model|Part-time|40000.0|20|2024=01-31|2024-09-30
+W012|Lionel Messi|Model|Full-time|100000.0|40|2024=01-01|2024-12-31
