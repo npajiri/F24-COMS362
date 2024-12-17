@@ -17,6 +17,18 @@ public class EmployeeMenu {
     }
 
     public void showMenu(Scanner scanner) {
+        System.out.print("Enter your Worker ID to log in: ");
+        String workerId = scanner.nextLine();
+
+        WorkerManagementSystem workerSystem = new WorkerManagementSystem();
+        WorkerManagementSystem.Worker worker = workerSystem.getWorkerById(workerId);
+
+        if (worker == null) {
+            System.out.println("Invalid Worker ID. Access denied.");
+            return;
+        }
+
+        System.out.println("\nWelcome, " + worker.getName() + "!");
         boolean running = true;
 
         while (running) {
@@ -45,7 +57,7 @@ public class EmployeeMenu {
                     break;
                 
                 case 4:
-                    handleWorkOrders(scanner);
+                    handleWorkOrders(scanner, workerId);
                     break;
 
                 case 0:
@@ -59,7 +71,7 @@ public class EmployeeMenu {
         }
     }
 
-    private void handleWorkOrders(Scanner scanner) {
+    private void handleWorkOrders(Scanner scanner, String workerId) {
         System.out.println("\n=== Work Orders ===");
         
         while (true) {
@@ -75,21 +87,21 @@ public class EmployeeMenu {
     
             switch (choice) {
                 case 1:
-                    viewOrdersByStatus("Pending");
+                    viewOrdersByStatus("Pending", workerId);
                     break;
     
                 case 2:
-                    viewOrdersByStatus("Completed");
+                    viewOrdersByStatus("Completed", workerId);
                     break;
     
                 case 3:
-                    viewAllOrders();
+                    viewAllOrders(workerId);
                     break;
     
                 case 4:
                       System.out.print("Enter Registration ID to mark as completed: ");
                     String registrationId = scanner.nextLine();
-                    markWorkOrderAsCompleted(registrationId);
+                    markWorkOrderAsCompleted(registrationId, workerId);
                     break;
     
                 case 5:
@@ -119,40 +131,45 @@ public class EmployeeMenu {
     // markWorkOrderAsCompleted(registrationId);
     // }
 
-    private void viewOrdersByStatus(String status) {
+    private void viewOrdersByStatus(String status, String workerId) {
         System.out.println("\n=== " + status + " Work Orders ===");
         try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
             String line;
             boolean hasOrders = false;
     
             while ((line = reader.readLine()) != null) {
-                if (line.contains("Status: " + status)) {
+                if (line.contains("Assigned Worker ID: " + workerId) && line.contains("Status: " + status)) {
                     System.out.println(line);
                     hasOrders = true;
                 }
             }
     
             if (!hasOrders) {
-                System.out.println("No " + status.toLowerCase() + " work orders found.");
+                System.out.println("No " + status.toLowerCase() + " work orders found for Worker ID: " + workerId);
             }
         } catch (IOException e) {
             System.err.println("Error reading work orders: " + e.getMessage());
         }
     }
 
-    private void viewAllOrders() {
-        System.out.println("\n=== All Work Orders ===");
+    private void viewAllOrders(String workerId) {
+        System.out.println("\n=== All Work Orders for Worker ID: " + workerId + " ===");
         try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
             String line;
             boolean hasOrders = false;
     
             while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-                hasOrders = true;
+
+                if (line.contains("Assigned Worker ID: " + workerId)) {
+                    System.out.println(line);
+                    hasOrders = true;
+                }
+                // System.out.println(line);
+                // hasOrders = true;
             }
     
             if (!hasOrders) {
-                System.out.println("No work orders found.");
+                System.out.println("No work orders found for Worker ID: " + workerId);
             }
         } catch (IOException e) {
             System.err.println("Error reading work orders: " + e.getMessage());
@@ -160,19 +177,21 @@ public class EmployeeMenu {
     }
 
     // Mark work order as completed
-    private void markWorkOrderAsCompleted(String registrationId) {
+    private void markWorkOrderAsCompleted(String registrationId, String workerId) {
         boolean found = false;
 
         try (BufferedReader reader = new BufferedReader(new FileReader("work_orders.txt"))) {
             List<String> lines = new ArrayList<>();
             String line;
             while ((line = reader.readLine()) != null) {
-                lines.add(line);
-                if (line.contains("Registration ID: " + registrationId)) {
+                // lines.add(line);
+                if (line.contains("Registration ID: " + registrationId) && line.contains("Assigned Worker ID: " + workerId) && line.contains("Status: Pending")) {
                     found = true;
-                    int index = lines.size() - 1;
-                    lines.set(index, lines.get(index).replace("Status: Pending", "Status: Completed"));
+                    //int index = lines.size() - 1;
+                    line = line.replace("Status: Pending", "Status: Completed");
+                    //lines.set(index, lines.get(index).replace("Status: Pending", "Status: Completed"));
                 }
+                lines.add(line);
             }
 
             if (found) {
@@ -186,7 +205,7 @@ public class EmployeeMenu {
                     System.err.println("Error updating work orders: " + e.getMessage());
                 }
             } else {
-                System.out.println("Registration ID not found.");
+                System.out.println("Registration ID not found or not assigned to you.");
             }
         } catch (IOException e) {
             System.err.println("Error reading work orders: " + e.getMessage());

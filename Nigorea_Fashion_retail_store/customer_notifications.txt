@@ -5,3 +5,4 @@ Customer ID: C002 | Product ID: P003 | Quantity: 1 | has been resolved. You can 
 Customer ID: C001 | Product ID: P003 | Quantity: 2 | has been resolved. You can add it to your cart now.
 Customer ID: C002 | Product ID: P003 | Quantity: 2 | has been resolved. You can add it to your cart now.
 Customer ID: C001 | Product ID: P003 | Quantity: 1 | has been resolved. You can add it to your cart now.
+Customer ID: C001 | Event Order ID: REG1734454350484 | Status: Shipped | Your event order has been shipped!

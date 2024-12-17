@@ -1,1 +1,3 @@
-Registration ID: REG1733961745823 | Outfit Description: Green robe, purple dress, green sneakers | Status: Completed
+Registration ID: REG1733961745823 | Outfit Description: Green robe, purple dress, green sneakers | Status: Completed | Assigned Worker ID: W012
+Registration ID: REG1733961745823 | Outfit Description: Green robe, purple dress, green sneakers | Status: Pending | Assigned Worker ID: W007
+Registration ID: REG1734454350484 | Outfit Description: beige dress, red boots | Status: Completed | Assigned Worker ID: W009

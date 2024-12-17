@@ -960,8 +960,17 @@ private void handleCreateWorkOrders(Scanner scanner) {
         return;
     }
 
+    System.out.print("Enter Worker ID to assign this work order(e.g Wxxx): ");
+    String workerId = scanner.nextLine();
+
+    WorkerManagementSystem workerSystem = new WorkerManagementSystem();
+    if (workerSystem.getWorkerById(workerId) == null) {
+        System.out.println("Invalid Worker ID. Please check and try again.");
+        return;
+    }
+
     // Create work order
-    createWorkOrder(registrationId, outfitDescription);
+    createWorkOrder(registrationId, outfitDescription, workerId);
 }
 
 // Retrieve Outfit Description from Event Orders File
@@ -981,11 +990,11 @@ private String getOutfitDescriptionFromEventOrders(String eventOrderId) {
 }
 
 // Save Work Order to File
-private void createWorkOrder(String registrationId, String outfitDescription) {
+private void createWorkOrder(String registrationId, String outfitDescription, String workerId) {
     try (BufferedWriter writer = new BufferedWriter(new FileWriter("work_orders.txt", true))) {
-        writer.write("Registration ID: " + registrationId + " | Outfit Description: " + outfitDescription + " | Status: Pending");
+        writer.write("Registration ID: " + registrationId + " | Outfit Description: " + outfitDescription + " | Status: Pending" + " | Assigned Worker ID: " + workerId);
         writer.newLine();
-        System.out.println("Work order created successfully!");
+        System.out.println("Work order created successfully and assigned to Worker ID: " + workerId);
     } catch (IOException e) {
         System.err.println("Error saving work order: " + e.getMessage());
     }

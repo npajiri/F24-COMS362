@@ -1,1 +1,2 @@
 C002|Fashion Show|REG1733961745823|Green robe, purple dress, green sneakers|Shipped
+C001|Fashion Show|REG1734454350484|beige dress, red boots|Shipped
